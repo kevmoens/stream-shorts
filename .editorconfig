@@ -189,8 +189,16 @@ csharp_space_between_square_brackets = false
 # Wrapping preferences
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
+csharp_prefer_system_threading_lock = true:suggestion
+csharp_style_prefer_implicitly_typed_lambda_expression = true:suggestion
+csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 
 #### Naming styles ####
+
+# CA1515: Consider making public types internal
+dotnet_diagnostic.CA1515.severity = none
+dotnet_diagnostic.CA1824.severity = none
+
 [*.{cs,vb}]
 
 # Naming rules
@@ -380,4 +388,10 @@ dotnet_naming_style.s_camelcase.required_prefix = s_
 dotnet_naming_style.s_camelcase.required_suffix = 
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
+tab_width = 2
+indent_size = 2
+end_of_line = crlf
 
+
+# Default severity for analyzer diagnostics with category 'Maintainability'
+dotnet_analyzer_diagnostic.category-Maintainability.severity = silent
