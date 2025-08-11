@@ -1,7 +1,12 @@
 using System.Globalization;
 using System.Text;
+using System.Xml;
+
+using Microsoft.VisualBasic;
 
 using StreamShorts.Library.Transcription;
+
+using static System.Collections.Specialized.BitVector32;
 
 namespace StreamShorts.Library.Analysis.Prompts;
 
@@ -11,12 +16,14 @@ namespace StreamShorts.Library.Analysis.Prompts;
 /// <inheritdoc/>
 internal sealed class DefaultAnalysisPrompt : IAnalysisPrompt
 {
+  /*
+    - **Informative:** Sections packed with valuable information or tips.
+    - **Insightful:** Portions offering unique perspectives or 'aha!' moments.
+    */
   private static readonly CompositeFormat Prompt = CompositeFormat.Parse(@"
   I need your help to transform my YouTube live stream transcript into engaging YouTube Shorts. Act as my content editor and pinpoint **all potential candidate segments** that are perfect for short-form video. I'm looking for clips that are:
   
     - **Funny:** Moments that will make viewers laugh.
-    - **Informative:** Sections packed with valuable information or tips.
-    - **Insightful:** Portions offering unique perspectives or 'aha!' moments.
 
   For each suggested short, please provide:
 
@@ -30,20 +37,25 @@ internal sealed class DefaultAnalysisPrompt : IAnalysisPrompt
   ```json
   {{
     ""title"": ""string"",
-    ""start_time"": ""string"",
-    ""end_time"": ""string"",
+    ""start_time"": ""TimeSpan"",
+    ""end_time"": ""TimeSpan"",
     ""description"": ""string"",
     ""explanation"": ""string""
   }}
   ```
 
-  Here is the transcript of my YouTube live stream:
+  Here is the transcript of my YouTube live stream below with the format of {{start_time}}  : {{text}}:
 
   {0}
   ");
 
   public string GetPrompt(IEnumerable<TranscriptionSegment> transcript)
   {
-    return string.Format(CultureInfo.InvariantCulture, Prompt, transcript);
+    return string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} - {script.EndTime} : {script.Text}")));
+  }
+  public static string GetPromptWrap(IEnumerable<TranscriptionSegment> transcript)
+  {
+    return string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} : {script.Text}"))) 
+      + '\n' + string.Format(CultureInfo.InvariantCulture, Prompt, "");
   }
 }

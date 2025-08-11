@@ -1,0 +1,110 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection.Metadata;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.AI;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.Ollama;
+
+using StreamShorts.Library.Analysis.Gemini;
+using StreamShorts.Library.Analysis.Prompts;
+using StreamShorts.Library.Transcription;
+
+namespace StreamShorts.Library.Analysis.Ollama;
+public sealed class OllamaAnalyzer : ITranscriptAnalyzer, IDisposable
+{
+  //private readonly DefaultAnalysisPrompt _prompt = new DefaultAnalysisPrompt();
+  private readonly Kernel _kernel;
+  private readonly HttpClient _httpClient;
+  public OllamaAnalyzer()
+  {
+
+
+    //var modelId = "deepseek-r1:8b"; // nezahatkorkmaz/deepseek-v3:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
+    //var modelId = "nezahatkorkmaz/deepseek-v3:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
+    var modelId = "phi4:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
+
+    var endpointString = "http://localhost:11434"; // System.Configuration.ConfigurationManager.AppSettings["OllamaEndPoint"]!;
+    if (string.IsNullOrWhiteSpace(endpointString))
+    {
+      throw new InvalidOperationException("OllamaModelId appSetting is missing or empty in app.config.");
+    }
+    var endpoint = new Uri(endpointString!);
+
+    // Create a custom HttpClient with increased timeout
+    _httpClient = new HttpClient
+    {
+      BaseAddress = endpoint,
+      Timeout = TimeSpan.FromMinutes(10) // Set your desired timeout here
+    };
+    //Chat
+    _kernel = Kernel.CreateBuilder()
+      .AddOllamaChatCompletion(modelId, _httpClient)
+      .Build();
+  }
+  public async Task<TranscriptAnalysis> AnalyzeAsync(IEnumerable<TranscriptionSegment> segments)
+  {
+
+
+    var allSegments = segments.ToList();
+    List<ShortClip> allClips = [];
+    IChatCompletionService chatCompletion = _kernel.GetRequiredService<IChatCompletionService>();
+
+    const int batchSize = 25;
+    for (int i = 0; i < allSegments.Count; i += batchSize)
+    {
+      var batch = allSegments.Skip(i).Take(batchSize).ToList();
+
+
+#pragma warning disable CA1031 // Do not catch general exception types
+      int retries = 0;
+      ChatHistory _chatHistory = [];
+      _chatHistory.AddUserMessage(DefaultAnalysisPrompt.GetPromptWrap(batch));
+      string? json = null;
+      while (retries < 3)
+        try
+        {
+
+
+          OllamaPromptExecutionSettings settings = new();
+          settings.ToChatOptions(_kernel)!.ResponseFormat = ChatResponseFormat.Json;
+          var response = await chatCompletion.GetChatMessageContentAsync(_chatHistory, settings).ConfigureAwait(false);
+
+
+          // Regex to match content between ```json and ```
+          var match = Regex.Match(response.Content!, @"```json\s*(.*?)\s*```", RegexOptions.Singleline);
+          if (match.Success)
+          {
+            json = match.Groups[1].Value;
+          }
+          else
+          {
+            json = response.Content!;
+          }
+          var clips = JsonSerializer.Deserialize<List<ShortClip>>(json ?? string.Empty);
+          allClips.AddRange(clips ?? []);
+          break;// Exit the retry loop if successful
+        }
+        catch (Exception ex)
+        {
+          Console.Write($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} - {json}");
+          await Console.Error.WriteLineAsync(ex.Message).ConfigureAwait(false);
+        }
+#pragma warning restore CA1031 // Do not catch general exception types
+
+    }
+    return new TranscriptAnalysis(allClips ?? []);
+
+  }
+
+  public void Dispose()
+  {
+    _httpClient?.Dispose();
+  }
+}

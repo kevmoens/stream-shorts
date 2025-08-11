@@ -17,5 +17,6 @@ global using StreamShorts.Console.Commands;
 global using StreamShorts.Console.Hosting;
 global using StreamShorts.Library.Analysis;
 global using StreamShorts.Library.Analysis.Gemini;
+global using StreamShorts.Library.Analysis.Ollama;
 global using StreamShorts.Library.Media.Audio;
 global using StreamShorts.Library.Transcription;

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 
 using StreamShorts.Library.Media;
 
@@ -35,7 +36,7 @@ public sealed class WhisperTranscriber : ITranscriber, IDisposable
 
   public async IAsyncEnumerable<TranscriptionSegment> TranscribeAsync(Stream audio, [EnumeratorCancellation] CancellationToken cancellationToken)
   {
-    var segmentDuration = TimeSpan.FromMinutes(2);
+    var segmentDuration = TimeSpan.FromSeconds(30);
     var wavStream = _audioService.ConvertMp3ToWav16(audio);
     var numberOfSegments = _audioService.GetNumberOfWavSegments(wavStream, segmentDuration);
 
@@ -44,15 +45,38 @@ public sealed class WhisperTranscriber : ITranscriber, IDisposable
       var segmentStream = _audioService.GetWavSegment(wavStream, segmentNumber, segmentDuration);
       var durationOffset = TimeSpan.FromMilliseconds(segmentNumber * segmentDuration.TotalMilliseconds);
 
+      StringBuilder sb = new();
+      TimeSpan? start = null;
+      TimeSpan? end = null;
       await foreach (var result in ProcessSegmentAsync(segmentStream, cancellationToken).ConfigureAwait(false))
       {
+        if (start is null)
+        {
+          start = result.Start;
+        }
+        end = result.End;
+        sb.Append(result.Text);
+        //yield return new TranscriptionSegment(
+        //  result.Start + durationOffset,
+        //  result.End + durationOffset,
+        //  result.Text
+        //);
+      }
+      if (start is not null && end is not null)
+      {
         yield return new TranscriptionSegment(
-          result.Start + durationOffset,
-          result.End + durationOffset,
-          result.Text
+          start.Value + durationOffset,
+          RoundToTheClosestSecond(end.Value + durationOffset),
+          sb.ToString()
         );
       }
     }
+  }
+
+  private static TimeSpan RoundToTheClosestSecond(TimeSpan timeSpan)
+  {
+    // Round to the nearest second
+    return new TimeSpan(timeSpan.Days, timeSpan.Hours, timeSpan.Minutes, timeSpan.Seconds, 0);
   }
 
   private async IAsyncEnumerable<SegmentData> ProcessSegmentAsync(

@@ -1,4 +1,6 @@
-﻿Log.Logger = new LoggerConfiguration()
+﻿using StreamShorts.Library.Analysis.Ollama;
+
+Log.Logger = new LoggerConfiguration()
   .WriteTo.File(
     formatter: new CompactJsonFormatter(),
     path: Path.Combine(AppContext.BaseDirectory, "logs", "log.jsonl"),
@@ -22,7 +24,8 @@ try
       services.AddSingleton<IFileSystem, FileSystem>();
       services.AddSingleton<IAudioExtractor, AudioExtractor>();
       services.AddSingleton<ITranscriber, WhisperTranscriber>();
-      services.AddSingleton<ITranscriptAnalyzer, GeminiAnalyzer>();
+      //services.AddSingleton<ITranscriptAnalyzer, GeminiAnalyzer>();
+      services.AddSingleton<ITranscriptAnalyzer, OllamaAnalyzer>();
     })
     .BuildApp()
     .RunAsync(args);

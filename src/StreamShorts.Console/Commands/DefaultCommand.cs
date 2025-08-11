@@ -1,16 +1,17 @@
+using System.Diagnostics;
+using FFMpegCore;
+
 namespace StreamShorts.Console.Commands;
 
 internal sealed class DefaultCommand(
   IFileSystem fileSystem,
   IAnsiConsole console,
-  IAudioExtractor audioExtractor,
   ITranscriber transcriber,
   ITranscriptAnalyzer transcriptAnalyzer
 ) : AsyncCommand<DefaultCommand.Settings>
 {
   private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
   private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
-  private readonly IAudioExtractor _audioExtractor = audioExtractor ?? throw new ArgumentNullException(nameof(audioExtractor));
   private readonly ITranscriber _transcriber = transcriber ?? throw new ArgumentNullException(nameof(transcriber));
   private readonly ITranscriptAnalyzer _transcriptAnalyzer = transcriptAnalyzer ?? throw new ArgumentNullException(nameof(transcriptAnalyzer));
 
@@ -45,17 +46,15 @@ internal sealed class DefaultCommand(
 
   public override async Task<int> ExecuteAsync(CommandContext context, Settings settings)
   {
+    Stopwatch stopwatch = Stopwatch.StartNew();
     _console.MarkupLine($"[blue]Processing stream:[/] {settings.Stream}");
     var videoStream = _fileSystem.File.OpenRead(settings.Stream);
 
     Stream? audioStream = null;
 
-    await _console.Status()
-      .Spinner(Spinner.Known.Dots)
-      .StartAsync("Extracting audio...", async ctx =>
-      {
-        audioStream = await _audioExtractor.ExtractMp3FromMp4Async(videoStream);
-      });
+    var outputPath = _fileSystem.Path.ChangeExtension(System.IO.Path.GetTempFileName(), ".mp3");
+    FFMpeg.ExtractAudio(settings.Stream, outputPath);
+    audioStream = _fileSystem.File.OpenRead(outputPath);
 
     if (audioStream is null)
     {
@@ -90,6 +89,32 @@ internal sealed class DefaultCommand(
         analysis = await _transcriptAnalyzer.AnalyzeAsync(transcriptionSegments);
       });
 
+    foreach (var clip in analysis!.ShortClips)
+    {
+      if (clip.EndTime < clip.StartTime)
+      {
+        continue;
+      }
+      var clipOutputPath = _fileSystem.Path.Combine(
+        _fileSystem.Path.GetDirectoryName(settings.Stream) ?? string.Empty,
+        $"{_fileSystem.Path.GetFileNameWithoutExtension(settings.Stream)}_clip_{clip.StartTime:hhmmss}_{clip.EndTime:hhmmss}.mp4"
+      );
+
+      // Use FFMpegCore to extract the clip from the original video
+      await FFMpeg.SubVideoAsync(settings.Stream, clipOutputPath, clip.StartTime, clip.EndTime);
+
+      _console.MarkupLine($"[green]Clip created:[/] {clipOutputPath}");
+    }
+
+    //Clean up temporary audio file
+    if (File.Exists(outputPath))
+    {
+      audioStream?.Close();
+      _fileSystem.File.Delete(outputPath);
+      _console.MarkupLine($"[blue]Temporary audio file deleted:[/] {outputPath}");
+    }
+    stopwatch.Stop();
+    _console.MarkupLine($"Process completed in {stopwatch.Elapsed.TotalMinutes} minutes!");
     return 0;
   }
 }

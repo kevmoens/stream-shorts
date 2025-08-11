@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "StreamShorts.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\kevmo\\Downloads\\Packers vs Rams Live Watch Party.mp4\""
+    }
+  }
+}
