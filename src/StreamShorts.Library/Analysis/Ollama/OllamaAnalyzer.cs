@@ -22,13 +22,18 @@ public sealed class OllamaAnalyzer : ITranscriptAnalyzer, IDisposable
   //private readonly DefaultAnalysisPrompt _prompt = new DefaultAnalysisPrompt();
   private readonly Kernel _kernel;
   private readonly HttpClient _httpClient;
-  public OllamaAnalyzer()
+  private readonly IAnalysisPrompt _analysisPrompt;
+  private readonly Settings _settings;
+
+  public OllamaAnalyzer(IAnalysisPrompt analysisPrompt, Settings settings)
   {
 
+    _analysisPrompt = analysisPrompt;
+    _settings = settings;
 
     //var modelId = "deepseek-r1:8b"; // nezahatkorkmaz/deepseek-v3:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
     //var modelId = "nezahatkorkmaz/deepseek-v3:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
-    var modelId = "phi4:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
+    string modelId = string.IsNullOrWhiteSpace(_settings.OllamaModelId) == false ? _settings.OllamaModelId : "phi4:latest"; // System.Configuration.ConfigurationManager.AppSettings["OllamaModelId"]!;
 
     var endpointString = "http://localhost:11434"; // System.Configuration.ConfigurationManager.AppSettings["OllamaEndPoint"]!;
     if (string.IsNullOrWhiteSpace(endpointString))
@@ -41,7 +46,7 @@ public sealed class OllamaAnalyzer : ITranscriptAnalyzer, IDisposable
     _httpClient = new HttpClient
     {
       BaseAddress = endpoint,
-      Timeout = TimeSpan.FromMinutes(10) // Set your desired timeout here
+      Timeout = TimeSpan.FromMinutes(_settings.LLMTimeoutMinutes) // Set your desired timeout here
     };
     //Chat
     _kernel = Kernel.CreateBuilder()
@@ -56,18 +61,17 @@ public sealed class OllamaAnalyzer : ITranscriptAnalyzer, IDisposable
     List<ShortClip> allClips = [];
     IChatCompletionService chatCompletion = _kernel.GetRequiredService<IChatCompletionService>();
 
-    const int batchSize = 25;
-    for (int i = 0; i < allSegments.Count; i += batchSize)
+    for (int i = 0; i < allSegments.Count; i += _settings.BatchSize)
     {
-      var batch = allSegments.Skip(i).Take(batchSize).ToList();
+      var batch = allSegments.Skip(i).Take(_settings.BatchSize).ToList();
 
 
 #pragma warning disable CA1031 // Do not catch general exception types
       int retries = 0;
       ChatHistory _chatHistory = [];
-      _chatHistory.AddUserMessage(DefaultAnalysisPrompt.GetPromptWrap(batch));
+      _chatHistory.AddUserMessage(_analysisPrompt.GetPromptWrap(batch));
       string? json = null;
-      while (retries < 3)
+      while (retries < _settings.LLMRetries)
         try
         {
 

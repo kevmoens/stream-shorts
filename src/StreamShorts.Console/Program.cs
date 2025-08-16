@@ -1,4 +1,5 @@
-﻿using StreamShorts.Library.Analysis.Ollama;
+﻿using StreamShorts.Library;
+using StreamShorts.Library.Analysis.Ollama;
 
 Log.Logger = new LoggerConfiguration()
   .WriteTo.File(
@@ -22,10 +23,7 @@ try
     {
       services.AddSingleton(AnsiConsole.Console);
       services.AddSingleton<IFileSystem, FileSystem>();
-      services.AddSingleton<IAudioExtractor, AudioExtractor>();
-      services.AddSingleton<ITranscriber, WhisperTranscriber>();
-      //services.AddSingleton<ITranscriptAnalyzer, GeminiAnalyzer>();
-      services.AddSingleton<ITranscriptAnalyzer, OllamaAnalyzer>();
+      services.AddStreamShorts();
     })
     .BuildApp()
     .RunAsync(args);

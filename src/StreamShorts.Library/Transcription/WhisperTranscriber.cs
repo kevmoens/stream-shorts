@@ -1,3 +1,4 @@
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -15,6 +16,7 @@ namespace StreamShorts.Library.Transcription;
 public sealed class WhisperTranscriber : ITranscriber, IDisposable
 {
   private readonly IAudioService _audioService = new NAudioService();
+  private readonly Settings _settings = new Settings();
   private WhisperProcessor? _whisperProcessor;
 
   /// <summary>
@@ -22,6 +24,7 @@ public sealed class WhisperTranscriber : ITranscriber, IDisposable
   /// </summary>
   public WhisperTranscriber()
   {
+
   }
 
   /// <summary>
@@ -29,14 +32,16 @@ public sealed class WhisperTranscriber : ITranscriber, IDisposable
   /// </summary>
   /// <param name="audioService">The audio service to use for audio processing.</param>
   /// <exception cref="ArgumentNullException">Thrown when the audio service is null.</exception
-  internal WhisperTranscriber(IAudioService audioService)
+  internal WhisperTranscriber(IAudioService audioService, Settings settings)
   {
     _audioService = audioService ?? throw new ArgumentNullException(nameof(audioService), $"{nameof(audioService)} cannot be null");
+    _settings = settings;
   }
 
   public async IAsyncEnumerable<TranscriptionSegment> TranscribeAsync(Stream audio, [EnumeratorCancellation] CancellationToken cancellationToken)
   {
-    var segmentDuration = TimeSpan.FromSeconds(30);
+    
+    var segmentDuration = _settings.MaxClipLength ?? TimeSpan.FromSeconds(30);
     var wavStream = _audioService.ConvertMp3ToWav16(audio);
     var numberOfSegments = _audioService.GetNumberOfWavSegments(wavStream, segmentDuration);
 

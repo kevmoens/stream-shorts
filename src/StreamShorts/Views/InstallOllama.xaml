@@ -1,0 +1,33 @@
+﻿<UserControl
+    x:Class="StreamShorts.Views.InstallOllama"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StreamShorts.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="3*" />
+        </Grid.RowDefinitions>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+            <TextBlock Text="Ollama is required to run local models. Click below and hit download.  Then click restart after Ollama is installed." TextWrapping="WrapWithOverflow" />
+            <Button
+                HorizontalAlignment="Center"
+                Command="{Binding OpenHttpLinkCommand}"
+                Content="https://www.ollama.com/download"
+                Style="{DynamicResource HyperlinkStyledButton}"
+                ToolTip="Some custom tooltip" />
+        </StackPanel>
+        <Button
+            Grid.Row="1"
+            Padding="3"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Command="{Binding RestartAppCommand}"
+            Content="Restart App" />
+    </Grid>
+</UserControl>

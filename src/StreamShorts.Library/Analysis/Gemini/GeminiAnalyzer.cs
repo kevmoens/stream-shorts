@@ -10,22 +10,21 @@ namespace StreamShorts.Library.Analysis.Gemini;
 /// Represents an analyzer that uses Gemini to analyze transcript segments and generate short clips.
 /// </summary>
 /// <inheritdoc/>
-public sealed class GeminiAnalyzer(
-  IHttpClientFactory httpClientFactory,
-  string apiKey
-  ) : ITranscriptAnalyzer
+public sealed class GeminiAnalyzer : ITranscriptAnalyzer
 {
-  private readonly IHttpClientFactory _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
-  private readonly string _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
-  private readonly IAnalysisPrompt _prompt = new DefaultAnalysisPrompt();
+  private readonly IHttpClientFactory _httpClientFactory;
+  private readonly IAnalysisPrompt _prompt;
+  private readonly Settings _settings;
 
   public GeminiAnalyzer(
     IHttpClientFactory httpClientFactory,
-    string apiKey,
-    IAnalysisPrompt prompt
-  ) : this(httpClientFactory, apiKey)
+    IAnalysisPrompt prompt,
+    Settings settings
+  )
   {
+    _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     _prompt = prompt ?? throw new ArgumentNullException(nameof(prompt));
+    _settings = settings;
   }
 
   public async Task<TranscriptAnalysis> AnalyzeAsync(IEnumerable<TranscriptionSegment> segments)
@@ -33,7 +32,7 @@ public sealed class GeminiAnalyzer(
     using var client = _httpClientFactory.CreateClient();
     client.Timeout = TimeSpan.FromMinutes(5);
 
-    var requestUrl = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={_apiKey}";
+    var requestUrl = _settings.GeminiEndpoint; // $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key={_apiKey}";
     var generateContentRequest = new GenerateContentRequest(
       [
         new Content(

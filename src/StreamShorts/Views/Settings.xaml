@@ -1,0 +1,226 @@
+﻿<UserControl
+    x:Class="StreamShorts.Views.Settings"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
+    xmlns:conv="clr-namespace:StreamShorts.Views.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:StreamShorts.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <b:Interaction.Triggers>
+        <b:EventTrigger EventName="Loaded">
+            <b:InvokeCommandAction Command="{Binding LoadedCommand}" />
+        </b:EventTrigger>
+    </b:Interaction.Triggers>
+    <UserControl.Resources>
+        <conv:LLMProviderVisibilityConverter
+            x:Key="OllamaVisiblity"
+            FalseVisibility="Collapsed"
+            TargetProvider="Ollama"
+            TrueVisibility="Visible" />
+        <conv:LLMProviderVisibilityConverter
+            x:Key="ChatGptVisiblity"
+            FalseVisibility="Collapsed"
+            TargetProvider="ChatGpt"
+            TrueVisibility="Visible" />
+        <conv:LLMProviderVisibilityConverter
+            x:Key="GeminiVisiblity"
+            FalseVisibility="Collapsed"
+            TargetProvider="Gemini"
+            TrueVisibility="Visible" />
+        <conv:BoolToVisibilityConverter
+            x:Key="BoolToVisibilityConverter"
+            FalseVisibility="Collapsed"
+            TrueVisibility="Visible" />
+        <conv:BoolToVisibilityConverter
+            x:Key="InverseBoolToVisibilityConverter"
+            FalseVisibility="Visible"
+            TrueVisibility="Collapsed" />
+
+        <conv:DefaultOllamaModelVisibility x:Key="DefaultOllamaModelVisibility" />
+    </UserControl.Resources>
+    <Grid>
+        <ScrollViewer Visibility="{Binding IsDownloadingPhi4, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <StackPanel Margin="20" VerticalAlignment="Top">
+                <TextBlock
+                    Margin="0,0,0,20"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Text="Settings" />
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="LLM Provider:" />
+                    <ComboBox
+                        Width="200"
+                        ItemsSource="{Binding LLMProviders}"
+                        SelectedItem="{Binding LLMProvider, Mode=TwoWay}">
+                        <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="SelectionChanged">
+                                <b:InvokeCommandAction Command="{Binding LLMProviderChangedCommand}" />
+                            </b:EventTrigger>
+                        </b:Interaction.Triggers>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource OllamaVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Ollama Model Id:" />
+                    <ComboBox
+                        Width="300"
+                        ItemsSource="{Binding OllamaModels}"
+                        SelectedItem="{Binding OllamaModelId, Mode=TwoWay}" />
+                    <Button
+                        Width="130"
+                        Margin="10,0,0,0"
+                        Command="{Binding DownloadPhi4ModelCommand}"
+                        Content="Download Phi4 Model">
+                        <Button.Visibility>
+                            <MultiBinding Converter="{StaticResource DefaultOllamaModelVisibility}">
+                                <Binding Path="OllamaModels" />
+                                <Binding Path="LLMProvider" />
+                            </MultiBinding>
+                        </Button.Visibility>
+                    </Button>
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource ChatGptVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="ChatGpt Api Key:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="ChatGpt Api Key"
+                        Text="{Binding ChatGptApiKey, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource GeminiVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Gemini Api Key:" />
+                    <TextBox
+                        Name="GeminiApiKeyTextBox"
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="Gemini Api Key"
+                        Text="{Binding GeminiApiKey, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource GeminiVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Gemini Model Id:" />
+                    <TextBox
+                        Name="GeminiModelIdTextBox"
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="Gemini Model Id"
+                        Text="{Binding GeminiModelId, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource GeminiVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Gemini Endpoint:" />
+                    <TextBox
+                        Name="GeminiEndpointTextBox"
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="Gemini Endpoint"
+                        Text="{Binding GeminiEndpoint, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Batch Size:" />
+                    <TextBox
+                        Width="100"
+                        conv:TextBoxHelper.Placeholder="Batch Size"
+                        Text="{Binding BatchSize, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="LLM Retries:" />
+                    <TextBox
+                        Width="100"
+                        conv:TextBoxHelper.Placeholder="LLM Retries"
+                        Text="{Binding LLMRetries, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, ValidatesOnExceptions=True}" />
+                </StackPanel>
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="LLM Timeout Minutes:" />
+                    <TextBox
+                        Width="100"
+                        conv:TextBoxHelper.Placeholder="LLM Timeout Minutes"
+                        Text="{Binding LLMTimeoutMinutes, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, ValidatesOnExceptions=True}" />
+                </StackPanel>
+                <CheckBox
+                    Margin="0,0,0,10"
+                    Content="Include Informative Clips"
+                    IsChecked="{Binding IncludeInformativeClips, Mode=TwoWay}" />
+                <CheckBox
+                    Margin="0,0,0,10"
+                    Content="Include Funny Clips"
+                    IsChecked="{Binding IncludeFunnyClips, Mode=TwoWay}" />
+                <CheckBox
+                    Margin="0,0,0,10"
+                    Content="Include Insightful Clips"
+                    IsChecked="{Binding IncludeInsightfulClips, Mode=TwoWay}" />
+                <StackPanel Margin="0,0,0,10" Orientation="Horizontal">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="Max Clip Length:" />
+                    <TextBox
+                        Width="100"
+                        conv:TextBoxHelper.Placeholder="Max Clip Length"
+                        Text="{Binding MaxClipLength, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, ValidatesOnExceptions=True}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        Width="100"
+                        Margin="0,20,0,0"
+                        HorizontalAlignment="Left"
+                        Command="{Binding SaveCommand}"
+                        Content="Save" />
+                    <Button
+                        Width="100"
+                        Margin="20,20,0,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CancelCommand}"
+                        Content="Cancel" />
+                </StackPanel>
+            </StackPanel>
+
+        </ScrollViewer>
+        <Grid Visibility="{Binding IsDownloadingPhi4, Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Text="Phi-4 Model is downloading.  Please wait until finished.  This may take awhile."
+                TextWrapping="Wrap" />
+        </Grid>
+    </Grid>
+</UserControl>

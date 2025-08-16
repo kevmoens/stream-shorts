@@ -1,19 +1,23 @@
 using System.Diagnostics;
 using FFMpegCore;
 
+using StreamShorts.Library;
+
 namespace StreamShorts.Console.Commands;
 
 internal sealed class DefaultCommand(
   IFileSystem fileSystem,
   IAnsiConsole console,
   ITranscriber transcriber,
-  ITranscriptAnalyzer transcriptAnalyzer
+  ITranscriptAnalyzer transcriptAnalyzer,
+  SettingsRepo settingsRepo
 ) : AsyncCommand<DefaultCommand.Settings>
 {
   private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
   private readonly IAnsiConsole _console = console ?? throw new ArgumentNullException(nameof(console));
   private readonly ITranscriber _transcriber = transcriber ?? throw new ArgumentNullException(nameof(transcriber));
   private readonly ITranscriptAnalyzer _transcriptAnalyzer = transcriptAnalyzer ?? throw new ArgumentNullException(nameof(transcriptAnalyzer));
+  private readonly SettingsRepo _settingsRepo = settingsRepo;
 
   internal class Settings : CommandSettings
   {
@@ -40,7 +44,7 @@ internal sealed class DefaultCommand(
     {
       return ValidationResult.Error("The specified stream file must be an .mp4 file.");
     }
-
+    _settingsRepo.LoadSettings();
     return base.Validate(context, settings);
   }
 

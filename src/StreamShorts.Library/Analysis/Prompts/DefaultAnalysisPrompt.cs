@@ -14,16 +14,17 @@ namespace StreamShorts.Library.Analysis.Prompts;
 /// Default implementation of the analysis prompt for generating YouTube Shorts.
 /// </summary>
 /// <inheritdoc/>
-internal sealed class DefaultAnalysisPrompt : IAnalysisPrompt
+public sealed class DefaultAnalysisPrompt : IAnalysisPrompt
 {
-  /*
-    - **Informative:** Sections packed with valuable information or tips.
-    - **Insightful:** Portions offering unique perspectives or 'aha!' moments.
-    */
+  public DefaultAnalysisPrompt(Settings settings)
+  {
+    _settings = settings;
+  }
+ 
   private static readonly CompositeFormat Prompt = CompositeFormat.Parse(@"
   I need your help to transform my YouTube live stream transcript into engaging YouTube Shorts. Act as my content editor and pinpoint **all potential candidate segments** that are perfect for short-form video. I'm looking for clips that are:
   
-    - **Funny:** Moments that will make viewers laugh.
+   --1--
 
   For each suggested short, please provide:
 
@@ -48,14 +49,34 @@ internal sealed class DefaultAnalysisPrompt : IAnalysisPrompt
 
   {0}
   ");
+  private readonly Settings _settings;
 
   public string GetPrompt(IEnumerable<TranscriptionSegment> transcript)
   {
-    return string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} - {script.EndTime} : {script.Text}")));
+    return UseSettings(string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} - {script.EndTime} : {script.Text}"))));
   }
-  public static string GetPromptWrap(IEnumerable<TranscriptionSegment> transcript)
+  public string GetPromptWrap(IEnumerable<TranscriptionSegment> transcript)
   {
-    return string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} : {script.Text}"))) 
-      + '\n' + string.Format(CultureInfo.InvariantCulture, Prompt, "");
+    return UseSettings(string.Format(CultureInfo.InvariantCulture, Prompt, string.Join('\n', transcript.Select(script => $"{script.StartTime} : {script.Text}"))) 
+      + '\n' + string.Format(CultureInfo.InvariantCulture, Prompt, ""));
+  }
+  private string UseSettings(string prompt)
+  {
+    StringBuilder sb = new StringBuilder(prompt);
+    if (_settings.IncludeFunnyClips)
+    {
+      sb.AppendLine("- **Funny:** Moments that will make viewers laugh.");
+    }
+    if (_settings.IncludeInformativeClips)
+    {
+      sb.AppendLine("- **Informative:** Sections packed with valuable information or tips.");
+    }
+    if (_settings.IncludeInsightfulClips)
+    {
+      sb.AppendLine("- **Insightful:** Portions offering unique perspectives or 'aha!' moments.");
+    }
+#pragma warning disable CA1307 // Specify StringComparison for clarity
+    return prompt.Replace("--1--", sb.ToString());
+#pragma warning restore CA1307 // Specify StringComparison for clarity
   }
 }

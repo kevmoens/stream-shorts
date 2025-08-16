@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,14 +18,27 @@ public class YouTubeDownload
   public Uri? URL { get; set; }
   public string? FolderPath { get; set; }
 
+  public async Task<string> GetVideoName()
+  {
+    ArgumentNullException.ThrowIfNull(URL);
+    var youtube = new YoutubeClient();
+
+    var video = await youtube.Videos.GetAsync(URL.OriginalString).ConfigureAwait(false);
+
+    var invalidChars = Path.GetInvalidFileNameChars();
+    string videoTitle = string.Concat(video.Title.Where(c => !invalidChars.Contains(c)));
+
+    return videoTitle;
+  }
   public async Task<string> GetVideo()
   {
     ArgumentNullException.ThrowIfNull(URL, nameof(URL));
     ArgumentNullException.ThrowIfNull(FolderPath, nameof(FolderPath));
-    var youtube = new YoutubeClient();
-    var video = await youtube.Videos.GetAsync(URL.AbsolutePath).ConfigureAwait(false);
 
-    var streamManifest = await youtube.Videos.Streams.GetManifestAsync(URL.AbsolutePath).ConfigureAwait(false);
+    var youtube = new YoutubeClient();
+    var video = await youtube.Videos.GetAsync(URL.OriginalString).ConfigureAwait(false);
+
+    var streamManifest = await youtube.Videos.Streams.GetManifestAsync(URL.OriginalString).ConfigureAwait(false);
 
 
     // Select best audio stream (highest bitrate)
@@ -41,21 +55,37 @@ public class YouTubeDownload
 
     // Download and mux streams into a single file
     var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
-    string path = Path.Combine(FolderPath, $"{video.Title}.mp4");
+
+    var invalidChars = Path.GetInvalidFileNameChars();
+    string videoTitle = string.Concat(video.Title.Where(c => !invalidChars.Contains(c)));
+
+    string path = Path.Combine(FolderPath, $"{videoTitle}.mp4");
     await youtube.Videos.DownloadAsync(streamInfos, new ConversionRequestBuilder(path).Build()).ConfigureAwait(false);
     return path;
 
   }
 
+	public async Task<byte[]> GetThumbnail()
+	{
+		ArgumentNullException.ThrowIfNull(URL, nameof(URL));
+		var youtube = new YoutubeClient();
+		var video = await youtube.Videos.GetAsync(URL.OriginalString).ConfigureAwait(false);
 
+		// Get the highest resolution thumbnail
+		var thumbnailUrl = video.Thumbnails.OrderByDescending(t => t.Resolution.Area).First().Url;
+
+		// Download the thumbnail
+		using var httpClient = new HttpClient();
+		return await httpClient.GetByteArrayAsync(new Uri(thumbnailUrl)).ConfigureAwait(false);
+	}
   public async Task<string> GetAudio()
   {
     ArgumentNullException.ThrowIfNull(URL, nameof(URL));
     ArgumentNullException.ThrowIfNull(FolderPath, nameof(FolderPath));
     var youtube = new YoutubeClient();
-    var video = await youtube.Videos.GetAsync(URL.AbsolutePath).ConfigureAwait(false);
+    var video = await youtube.Videos.GetAsync(URL.OriginalString).ConfigureAwait(false);
 
-    var streamManifest = await youtube.Videos.Streams.GetManifestAsync(URL.AbsolutePath).ConfigureAwait(false);
+    var streamManifest = await youtube.Videos.Streams.GetManifestAsync(URL.OriginalString).ConfigureAwait(false);
 
     var audioStreamInfo = streamManifest
       .GetAudioStreams()

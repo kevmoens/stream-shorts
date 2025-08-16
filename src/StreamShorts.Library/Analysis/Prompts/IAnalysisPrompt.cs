@@ -13,4 +13,5 @@ public interface IAnalysisPrompt
   /// <param name="transcript">The transcript segments to analyze.</param>
   /// <returns>A formatted prompt string for analysis.</returns>
   string GetPrompt(IEnumerable<TranscriptionSegment> transcript);
+  string GetPromptWrap(IEnumerable<TranscriptionSegment> transcript);
 }

@@ -9,11 +9,12 @@ namespace StreamShorts.PC;
 
 public partial class KeepPCAwake : IDisposable
 {
-  [LibraryImport("kernel32.dll", SetLastError = true)]
-  private static EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags)
-  {
-    return SetThreadExecutionState(esFlags);
-  }
+
+  [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+#pragma warning disable CA5392 // Use DefaultDllImportSearchPaths attribute for P/Invokes
+  private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
+#pragma warning restore CA5392 // Use DefaultDllImportSearchPaths attribute for P/Invokes
+
   [FlagsAttribute]
 #pragma warning disable CA1028 // Enum Storage should be Int32
 #pragma warning disable CA1707 // Identifiers should not contain underscores
