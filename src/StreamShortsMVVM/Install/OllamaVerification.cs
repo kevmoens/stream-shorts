@@ -39,7 +39,7 @@ public static class OllamaVerification
     catch (System.ComponentModel.Win32Exception)
     {
       //Ollama not installed
-      NavigationEvent.Instance.PublishEvent("InstallOllama", []);
+      await NavigationEvent.Instance.PublishEvent("InstallOllama", []).ConfigureAwait(false);
     }
 
     return new List<string>();

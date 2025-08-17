@@ -1,4 +1,4 @@
-﻿using StreamShorts.ViewModels;
+﻿using StreamShorts.MVVM.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;

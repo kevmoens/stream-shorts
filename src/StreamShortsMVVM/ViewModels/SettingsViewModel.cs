@@ -9,8 +9,10 @@ using System.Windows.Input;
 using StreamShorts.MVVM.Install;
 using StreamShorts.Library;
 using StreamShorts.Library.Analysis;
-using StreamShorts.MVVM;
+using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
+using StreamShorts.MVVM.Interfaces;
+using StreamShortsMVVM.Interfaces;
 
 namespace StreamShorts.MVVM.ViewModels;
 public class SettingsViewModel : INotifyPropertyChanged
@@ -29,11 +31,17 @@ public class SettingsViewModel : INotifyPropertyChanged
   public ICommand LLMProviderChangedCommand { get; set; }
   public ICommand DownloadPhi4ModelCommand { get; set; }
   private readonly SettingsRepo _settingsRepo;
+  private readonly IUiDispatcher _uiDispatcher;
+  private readonly IMessageBox _messageBox;
+  private readonly ISettingsCanSave _settingsCanSave;
 
-  public SettingsViewModel(Settings settings, SettingsRepo settingsRepo)
+  public SettingsViewModel(Settings settings, SettingsRepo settingsRepo, IUiDispatcher uiDispatcher, IMessageBox messageBox, ISettingsCanSave settingsCanSave)
   {
     _settings = settings;
     _settingsRepo = settingsRepo;
+    _uiDispatcher = uiDispatcher;
+    _messageBox = messageBox;
+    _settingsCanSave = settingsCanSave;
     LoadedCommand = new DelegateCommand(OnLoaded);
     SaveCommand = new DelegateCommand(OnSave, CanSave);
     CancelCommand = new DelegateCommand(OnCancel);
@@ -61,7 +69,7 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     await OnLLMProviderChanged().ConfigureAwait(false);
   }
-  private void OnSave()
+  private async void OnSave()
   {
     _settings.LLMProvider = LLMProvider;
     _settings.OllamaModelId = OllamaModelId;
@@ -77,12 +85,12 @@ public class SettingsViewModel : INotifyPropertyChanged
     _settings.IncludeInsightfulClips = IncludeInsightfulClips;
     _settings.MaxClipLength = MaxClipLength;
     _settingsRepo.SaveSettings();
-    NavigationEvent.Instance.PublishEvent("ExistingProjects", []);
+    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
 
-  private void OnCancel()
+  private async void OnCancel()
   {
-    NavigationEvent.Instance.PublishEvent("ExistingProjects", []);
+    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
   private async Task OnLLMProviderChanged()
   {
@@ -97,10 +105,11 @@ public class SettingsViewModel : INotifyPropertyChanged
     List<string>? models = await OllamaVerification.GetModels().ConfigureAwait(false);
     foreach (var model in models)
     {
-      System.Windows.Application.Current.Dispatcher.Invoke(() =>
+      await _uiDispatcher.InvokeAsync(() =>
       {
         OllamaModels.Add(model);
-      });
+        return Task.CompletedTask;
+      }).ConfigureAwait(false);
     }
 #pragma warning disable CA1507 // Use nameof to express symbol names
       OnPropertyChanged("LLMProvider"); //Fire again because we want the converter to run
@@ -108,10 +117,10 @@ public class SettingsViewModel : INotifyPropertyChanged
   }
   public void OnDownloadPhi4Model()
   {
-    var result = MessageBox.Show("Phi4:latest is a 9GB model.  This will take time to download.  Do you want to continue?", "Download Model", MessageBoxButton.YesNo);
-    if (result != MessageBoxResult.Yes)
-    { 
-      return; 
+    var result = _messageBox.Show("Phi4:latest is a 9GB model.  This will take time to download.  Do you want to continue?", "Download Model", MessageButtons.YesNo, MessageImage.None);
+    if (result == MessageButtons.Yes)
+    {
+      return;
     }
 #pragma warning disable CA1031 // Do not catch general exception types
     try
@@ -131,7 +140,7 @@ public class SettingsViewModel : INotifyPropertyChanged
         process.StartInfo = startInfo;
         process.Start();
         process.WaitForExit();
-        MessageBox.Show("Phi4:Latest is now downloaded, restarting app.");
+        _messageBox.Show("Phi4:Latest is now downloaded, restarting app.", "Stream Shorts", MessageButtons.OK, MessageImage.None);
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
           FileName = Environment.ProcessPath!,
@@ -265,26 +274,7 @@ public class SettingsViewModel : INotifyPropertyChanged
   private bool CanSave()
 #pragma warning restore CA1822 // Mark members as static
   {
-    // This assumes you only have one main window with the settings controls
-    foreach (Window window in System.Windows.Application.Current.Windows)
-    {
-      if (HasValidationError(window))
-        return false;
-    }
-    return true;
+    return _settingsCanSave.CanSave();
   }
 
-  private static bool HasValidationError(DependencyObject obj)
-  {
-    if (System.Windows.Controls.Validation.GetHasError(obj))
-      return true;
-
-    for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(obj); i++)
-    {
-      var child = System.Windows.Media.VisualTreeHelper.GetChild(obj, i);
-      if (HasValidationError(child))
-        return true;
-    }
-    return false;
-  }
 }

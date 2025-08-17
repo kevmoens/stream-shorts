@@ -13,8 +13,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-using StreamShorts.MVVM;
-using StreamShorts.ViewModels;
+using StreamShorts.MVVM.MVVM;
+using StreamShorts.MVVM.ViewModels;
 
 namespace StreamShorts.Views;
 /// <summary>

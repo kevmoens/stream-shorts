@@ -22,5 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StreamShorts.Library\StreamShorts.Library.csproj" />
+    <ProjectReference Include="..\StreamShortsMVVM\StreamShortsMVVM.csproj" />
   </ItemGroup>
 </Project>

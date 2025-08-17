@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 
+using StreamShorts.MVVM.Interfaces;
+using StreamShorts.MVVM.Projects;
 using StreamShorts.Projects;
 
 namespace StreamShorts.Views.Converters;
@@ -18,7 +20,7 @@ public class ProjectFileOpenMediaConverter : IMultiValueConverter
     {
       return null; // Invalid input
     }
-    if (values[0] is ProjectFile file && values[1] is MediaElement mediaElement)
+    if (values[0] is ProjectFile file && values[1] is IMediaElement mediaElement)
     {
       return new ProjectFileMediaElement(file, mediaElement);
     }

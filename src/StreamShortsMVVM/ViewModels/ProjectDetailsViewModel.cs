@@ -6,14 +6,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 
 using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
 using StreamShorts.MVVM.Projects.Processing;
-using StreamShorts.Views.Converters;
+
+using StreamShorts.MVVM.Interfaces;
 
 namespace StreamShorts.MVVM.ViewModels;
 public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAware
@@ -30,21 +29,23 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
   public ICommand PlayCommand { get; set; }
   public ICommand PauseCommand { get; set; }
   public ICommand StopCommand { get; set; }
-  public ProjectDetailsViewModel(VideoQueueManager queueManager, VideoWorkItem videoWorkItem)
+  public ProjectDetailsViewModel(VideoQueueManager queueManager, VideoWorkItem videoWorkItem, IMessageBox messageBox)
   {
     BackCommand = new DelegateCommand(OnBack);
     OpenVideoCommand = new DelegateCommand(OnOpenVideo);
     ProcessCommand = new DelegateCommand(async () => await OnProcess().ConfigureAwait(false));
-    OpenFileCommand = new DelegateCommand<ProjectFileMediaElement>(OnOpenFile);
-    PlayCommand = new DelegateCommand<MediaElement>(OnPlay);
-    PauseCommand = new DelegateCommand<MediaElement>(OnPause);
-    StopCommand = new DelegateCommand<MediaElement>(OnStop);
+    OpenFileCommand = new DelegateCommand<IProjectFileMediaElement>(OnOpenFile);
+    PlayCommand = new DelegateCommand<IMediaElement>(OnPlay);
+    PauseCommand = new DelegateCommand<IMediaElement>(OnPause);
+    StopCommand = new DelegateCommand<IMediaElement>(OnStop);
     _queueManager = queueManager;
     _videoWorkItem = videoWorkItem;
+    _messageBox = messageBox;
   }
   private Project? _project;
   private readonly VideoQueueManager _queueManager;
   private readonly VideoWorkItem _videoWorkItem;
+  private readonly IMessageBox _messageBox;
 
   public Project? Project
   {
@@ -93,9 +94,9 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     }
   }
 
-  public static void OnBack()
+  public static async void OnBack()
   {
-    NavigationEvent.Instance.PublishEvent("ExistingProjects", []);
+    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
   public void OnOpenVideo()
   {
@@ -116,7 +117,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     }
     catch (Exception ex)
     {
-      MessageBox.Show($"Unable to open video. {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+      _messageBox.Show($"Unable to open video. {ex.Message}", "Error", MessageButtons.OK, MessageImage.Error);
     }
 #pragma warning restore CA1031 // Do not catch general exception types
   }
@@ -127,7 +128,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     await _queueManager.Enqueue(_videoWorkItem).ConfigureAwait(false);
 
   }
-  public void OnOpenFile(ProjectFileMediaElement pfme)
+  public void OnOpenFile(IProjectFileMediaElement pfme)
   {
     if (pfme == null)
     {
@@ -137,7 +138,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     CurrentVideo = pfme.ProjectFile.Name;
     pfme.MediaElement.Play();
   }
-  public void OnPlay(MediaElement mediaElement)
+  public void OnPlay(IMediaElement mediaElement)
   {
     if (mediaElement == null || VideoSource == null)
     {
@@ -146,7 +147,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     //mediaElement.Source = VideoSource;
     mediaElement.Play();
   }
-  public void OnPause(MediaElement mediaElement)
+  public void OnPause(IMediaElement mediaElement)
   {
     if (mediaElement == null || VideoSource == null)
     {
@@ -154,7 +155,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     }
     mediaElement.Pause();
   }
-  public void OnStop(MediaElement mediaElement)
+  public void OnStop(IMediaElement mediaElement)
   {
     if (mediaElement == null || VideoSource == null)
     {

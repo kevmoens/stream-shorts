@@ -5,10 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 
+using StreamShorts.MVVM.Interfaces;
+using StreamShorts.MVVM.Projects;
+
 namespace StreamShorts.Projects;
-public class ProjectFileMediaElement
+public class ProjectFileMediaElement : IProjectFileMediaElement
 {
-  public ProjectFileMediaElement(ProjectFile projectFile, MediaElement mediaElement)
+  public ProjectFileMediaElement(ProjectFile projectFile, IMediaElement mediaElement)
   {
     _projectFile = projectFile;
     _mediaElement = mediaElement;
@@ -20,9 +23,9 @@ public class ProjectFileMediaElement
     get { return _projectFile; }
     set { _projectFile = value; }
   }
-  private MediaElement _mediaElement;
+  private IMediaElement _mediaElement;
 
-  public MediaElement MediaElement
+  public IMediaElement MediaElement
   {
     get { return _mediaElement; }
     set { _mediaElement = value; }

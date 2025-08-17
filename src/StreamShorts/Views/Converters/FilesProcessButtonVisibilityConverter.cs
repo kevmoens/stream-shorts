@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
-using StreamShorts.Projects;
+using StreamShorts.MVVM.Projects;
 
 namespace StreamShorts.Views.Converters;
 public class FilesProcessButtonVisibilityConverter : IMultiValueConverter

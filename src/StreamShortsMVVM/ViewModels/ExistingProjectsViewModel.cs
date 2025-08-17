@@ -11,6 +11,8 @@ using System.Windows.Input;
 using StreamShorts.Library;
 using StreamShorts.Library.Analysis;
 using StreamShorts.MVVM;
+using StreamShorts.MVVM.Interfaces;
+using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
 
 namespace StreamShorts.MVVM.ViewModels;
@@ -24,6 +26,7 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
   }
   private readonly ProjectFolderRepo _projectRepo;
   private readonly Settings _settings;
+  private readonly IMessageBox _messageBox;
 
   public ProjectFolderRepo ProjectRepo
   {
@@ -34,15 +37,16 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
   public ICommand AddProjectCommand { get; set; }
   public ICommand OpenProjectCommand { get; set; }
   public ICommand DeleteProjectCommand { get; set; }
-  public ExistingProjectsViewModel(ProjectFolderRepo projectRepo, Settings settings)
+  public ExistingProjectsViewModel(ProjectFolderRepo projectRepo, Settings settings, IMessageBox messageBox)
   {
     LoadedCommand = new DelegateCommand(OnLoaded);
     SettingsCommand = new DelegateCommand(OnSettings);
     AddProjectCommand = new DelegateCommand(OnAddProject);
     OpenProjectCommand = new DelegateCommand<Project>(OnOpenProject);
-    DeleteProjectCommand = new DelegateCommand<Project>(OnDeleteProject);
+    DeleteProjectCommand = new DelegateCommand<Project>(async (proj) => await OnDeleteProject(proj).ConfigureAwait(false));
     _projectRepo = projectRepo;
     _settings = settings;
+    _messageBox = messageBox;
   }
 
   private async void OnLoaded()
@@ -52,43 +56,43 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
 
   private void OnSettings()
   {
-    NavigationEvent.Instance.PublishEvent("Settings", []);
+    NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
   }
 
   private void OnAddProject()
   {
     if (InvalidSettings())
     {
-      NavigationEvent.Instance.PublishEvent("Settings", []);
+      NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
       return;
     }
-    NavigationEvent.Instance.PublishEvent("AddProject", []);
+    NavigationEvent.Instance.PublishEvent("AddProject", []).ConfigureAwait(false);
   }
-  private void OnOpenProject(Project project)
+  private async void OnOpenProject(Project project)
   {
     if (InvalidSettings())
     {
-      NavigationEvent.Instance.PublishEvent("Settings", []);
+      await NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
       return;
     }
     if (project == null)
     {
-      MessageBox.Show("Please select a project to open.", "No Project Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+      _messageBox.Show("Please select a project to open.", "No Project Selected", MessageButtons.OK, MessageImage.Warning);
       return;
     }
-    NavigationEvent.Instance.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "Exists" }, { "Project", project } });
+    await NavigationEvent.Instance.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "Exists" }, { "Project", project } }).ConfigureAwait(false);
   }
-  private void OnDeleteProject(Project project)
+  private async Task OnDeleteProject(Project project)
   {
     if (project == null)
     {
-      MessageBox.Show("Please select a project to delete.", "No Project Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+      _messageBox.Show("Please select a project to delete.", "No Project Selected", MessageButtons.OK, MessageImage.Warning);
       return;
     }
-    var result = MessageBox.Show($"Are you sure you want to delete the project '{project.ProjectName}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
-    if (result == MessageBoxResult.Yes)
+    var result = _messageBox.Show($"Are you sure you want to delete the project '{project.ProjectName}'?", "Confirm Delete", MessageButtons.YesNo, MessageImage.Warning);
+    if (result == MessageButtons.Yes)
     {
-      ProjectRepo.DeleteProject(project);
+      await ProjectRepo.DeleteProject(project).ConfigureAwait(false);
     }
   }
   private bool InvalidSettings()
@@ -103,7 +107,7 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
     }
     if (_settings.LLMProvider == LLMProvider.Gemini)
     {
-      MessageBox.Show("Gemini is not yet supported. Please select a different LLM provider.", "Unsupported LLM Provider", MessageBoxButton.OK, MessageBoxImage.Warning);
+      _messageBox.Show("Gemini is not yet supported. Please select a different LLM provider.", "Unsupported LLM Provider", MessageButtons.OK, MessageImage.Warning);
       return true;
     }
     if (string.IsNullOrWhiteSpace(_settings.GeminiApiKey) && _settings.LLMProvider == LLMProvider.Gemini)

@@ -14,6 +14,7 @@ using StreamShorts.Library;
 using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
 using StreamShorts.MVVM.Projects.Processing;
+using StreamShorts.MVVM.Interfaces;
 
 namespace StreamShorts.MVVM.ViewModels
 {
@@ -48,6 +49,7 @@ namespace StreamShorts.MVVM.ViewModels
     private readonly IFactory<IPage> _pageFactory;
     private readonly SettingsRepo _settingsRepo;
     private VideoQueueManager _videoQueueManager;
+    private readonly IUiDispatcher _uiDispatcher;
 
     public VideoQueueManager VideoQueueManager
     {
@@ -59,12 +61,14 @@ namespace StreamShorts.MVVM.ViewModels
     public MainWindowViewModel([FromKeyedServices("ExistingProjects")] IPage existingProjectsPage,
                                IFactory<IPage> pageFactory,
                                SettingsRepo settingsRepo,
-                               VideoQueueManager videoQueueManager
+                               VideoQueueManager videoQueueManager,
+                               IUiDispatcher uiDispatcher
                                )
     {
       _pageFactory = pageFactory;
       _settingsRepo = settingsRepo;
       _videoQueueManager = videoQueueManager;
+      _uiDispatcher = uiDispatcher;
       Content = existingProjectsPage;
       NavigationEvent.Instance.SubscribeToEvent(OnNavigationEvent);
       LoadedCommand = new DelegateCommand(OnLoaded);
@@ -77,7 +81,7 @@ namespace StreamShorts.MVVM.ViewModels
       if (await FFMpegVerification.IsFFMpegInstalled().ConfigureAwait(false) == false)
       {
         // Handle FFMpeg not installed
-        NavigationEvent.Instance.PublishEvent("InstallFFMpeg", []);
+        await NavigationEvent.Instance.PublishEvent("InstallFFMpeg", []).ConfigureAwait(false);
       }
     }
 
@@ -85,12 +89,13 @@ namespace StreamShorts.MVVM.ViewModels
     {
     }
 
-    private void OnNavigationEvent(object? sender, NavigationEventArgs? e)
+    private async Task OnNavigationEvent( NavigationEventArgs? e)
     {
       if (e == null) return;
 
-      System.Windows.Application.Current.Dispatcher.Invoke(() =>
+      await _uiDispatcher.InvokeAsync(() =>
       {
+
         var view = _pageFactory.Create(e.Page);
         Title = $"Stream Shorts {e.Page}";
         Content = view;
@@ -98,7 +103,9 @@ namespace StreamShorts.MVVM.ViewModels
         {
           vm.OnNavigatedTo(e.Parms);
         }
-      });
+        return Task.CompletedTask;
+      }).ConfigureAwait(false);
+    
     }
   }
 }

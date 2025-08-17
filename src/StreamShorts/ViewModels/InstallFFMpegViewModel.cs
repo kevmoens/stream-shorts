@@ -9,6 +9,7 @@ using System.Windows.Input;
 using System.Windows;
 using StreamShorts.MVVM;
 using System.IO;
+using StreamShorts.MVVM.MVVM;
 
 #pragma warning disable CA1031 // Do not catch general exception types
 namespace StreamShorts.ViewModels;
@@ -53,7 +54,7 @@ public class InstallFFMpegViewModel : INotifyPropertyChanged
     });
   }
 
-  private void OnDrop(DragEventArgs e)
+  private async void OnDrop(DragEventArgs e)
   {
     if (e.Data.GetDataPresent(DataFormats.FileDrop))
     {
@@ -94,7 +95,7 @@ public class InstallFFMpegViewModel : INotifyPropertyChanged
         MessageBox.Show("ffprobe.exe was not found in the extracted files.", "Missing ffprobe", MessageBoxButton.OK, MessageBoxImage.Warning);
         return;
       }
-      NavigationEvent.Instance.PublishEvent("ExistingProjects", []);
+      await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
 
     }
   }

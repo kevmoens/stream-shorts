@@ -11,12 +11,17 @@ using Microsoft.Extensions.DependencyInjection;
 
 using StreamShorts.Library;
 using StreamShorts.MVVM;
+using StreamShorts.MVVM.Interfaces;
+using StreamShorts.MVVM.MVVM;
+using StreamShorts.MVVM.Projects;
+using StreamShorts.MVVM.Projects.Processing;
+using StreamShorts.MVVM.ViewModels;
+using StreamShorts.MVVM.YouTube;
 using StreamShorts.PC;
-using StreamShorts.Projects;
-using StreamShorts.Projects.Processing;
+using StreamShorts.UI;
 using StreamShorts.ViewModels;
 using StreamShorts.Views;
-using StreamShorts.YouTube;
+
 
 namespace StreamShorts
 {
@@ -63,6 +68,9 @@ namespace StreamShorts
       services.AddTransient<VideoWorkItem>();
       services.AddTransient<VideoWorkItemProcessor>();
       services.AddTransient(typeof(IFactory<>), typeof(ServiceProviderFactory<>));
+
+      services.AddTransient<IMessageBox, UI.MessageBox>();
+      services.AddTransient<IUiDispatcher, UiDispatcher>();
 
       _serviceProvider = services.BuildServiceProvider();
 		}
