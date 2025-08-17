@@ -1,0 +1,26 @@
+﻿@page "/"
+
+<h1>Hello, world!</h1>
+@if (isFFMpegInstalled)
+{
+    <p>FFmpeg is installed.</p>
+}
+else
+{
+    <p>FFmpeg is not installed.</p>
+}
+@foreach (var model in ollamaModels ?? [])
+{
+    <p>Ollama Model: @model</p>
+}
+@code{
+    private bool isFFMpegInstalled;
+    private List<string>? ollamaModels;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isFFMpegInstalled = await StreamShorts.MVVM.Install.FFMpegVerification.IsFFMpegInstalled();
+        ollamaModels = await StreamShorts.MVVM.Install.OllamaVerification.GetModels();
+    }
+
+}

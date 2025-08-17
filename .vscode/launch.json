@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "C#: StreamShortsBlazor Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}/src/StreamShortsBlazor/StreamShortsBlazor.csproj"
+        },
+        {
+            "name": "C#: Launch Startup Project",
+            "type": "dotnet",
+            "request": "launch"
+        }
+    ]
+}
