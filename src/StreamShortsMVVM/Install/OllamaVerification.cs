@@ -9,10 +9,16 @@ using System.Threading.Tasks;
 using StreamShorts.MVVM.MVVM;
 
 namespace StreamShorts.MVVM.Install;
-public static class OllamaVerification
+public  class OllamaVerification
 {
+  private readonly INavigationEvent _navigationEvent;
+
+  public OllamaVerification(INavigationEvent navigationEvent)
+  {
+    _navigationEvent = navigationEvent;
+  }
 #pragma warning disable CA1002 // Do not expose generic lists
-  public static async Task<List<string>> GetModels()
+  public async Task<List<string>> GetModels()
 #pragma warning restore CA1002 // Do not expose generic lists
   {
     try
@@ -39,7 +45,7 @@ public static class OllamaVerification
     catch (System.ComponentModel.Win32Exception)
     {
       //Ollama not installed
-      await NavigationEvent.Instance.PublishEvent("InstallOllama", []).ConfigureAwait(false);
+      await _navigationEvent.PublishEvent("InstallOllama", []).ConfigureAwait(false);
     }
 
     return new List<string>();

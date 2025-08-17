@@ -26,7 +26,13 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
   }
   private readonly ProjectFolderRepo _projectRepo;
   private readonly Settings _settings;
-  private readonly IMessageBox _messageBox;
+  private readonly INavigationEvent _navigationEvent;
+  private IMessageBox _messageBox;
+    public IMessageBox MessageBox
+  {
+    get { return _messageBox; }
+    set { _messageBox = value; OnPropertyChanged(); }
+  }
 
   public ProjectFolderRepo ProjectRepo
   {
@@ -37,65 +43,66 @@ public class ExistingProjectsViewModel : INotifyPropertyChanged
   public ICommand AddProjectCommand { get; set; }
   public ICommand OpenProjectCommand { get; set; }
   public ICommand DeleteProjectCommand { get; set; }
-  public ExistingProjectsViewModel(ProjectFolderRepo projectRepo, Settings settings, IMessageBox messageBox)
+  public ExistingProjectsViewModel(ProjectFolderRepo projectRepo, Settings settings, IMessageBox messageBox, INavigationEvent navigationEvent)
   {
-    LoadedCommand = new DelegateCommand(OnLoaded);
-    SettingsCommand = new DelegateCommand(OnSettings);
-    AddProjectCommand = new DelegateCommand(OnAddProject);
-    OpenProjectCommand = new DelegateCommand<Project>(OnOpenProject);
+    LoadedCommand = new DelegateCommand(async () => await OnLoaded().ConfigureAwait(false));
+    SettingsCommand = new DelegateCommand(async () => await OnSettings().ConfigureAwait(false));
+    AddProjectCommand = new DelegateCommand(async () => await OnAddProject().ConfigureAwait(false));
+    OpenProjectCommand = new DelegateCommand<Project>(async (proj) => await OnOpenProject(proj).ConfigureAwait(false));
     DeleteProjectCommand = new DelegateCommand<Project>(async (proj) => await OnDeleteProject(proj).ConfigureAwait(false));
     _projectRepo = projectRepo;
     _settings = settings;
     _messageBox = messageBox;
+    _navigationEvent = navigationEvent;
   }
 
-  private async void OnLoaded()
+  public async Task OnLoaded()
   {
     await _projectRepo.LoadAll().ConfigureAwait(false);
   }
 
-  private void OnSettings()
+  public async Task OnSettings()
   {
-    NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("Settings", []).ConfigureAwait(false);
   }
 
-  private void OnAddProject()
+  public async Task OnAddProject()
   {
     if (InvalidSettings())
     {
-      NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
+      await _navigationEvent.PublishEvent("Settings", []).ConfigureAwait(false);
       return;
     }
-    NavigationEvent.Instance.PublishEvent("AddProject", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("AddProject", []).ConfigureAwait(false);
   }
-  private async void OnOpenProject(Project project)
+  public async Task OnOpenProject(Project project)
   {
     if (InvalidSettings())
     {
-      await NavigationEvent.Instance.PublishEvent("Settings", []).ConfigureAwait(false);
+      await _navigationEvent.PublishEvent("Settings", []).ConfigureAwait(false);
       return;
     }
     if (project == null)
     {
-      _messageBox.Show("Please select a project to open.", "No Project Selected", MessageButtons.OK, MessageImage.Warning);
+      await _messageBox.Show("Please select a project to open.", "No Project Selected", MessageButtons.OK, MessageImage.Warning).ConfigureAwait(false);
       return;
     }
-    await NavigationEvent.Instance.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "Exists" }, { "Project", project } }).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "Exists" }, { "Project", project } }).ConfigureAwait(false);
   }
-  private async Task OnDeleteProject(Project project)
+  public async Task OnDeleteProject(Project project)
   {
     if (project == null)
     {
-      _messageBox.Show("Please select a project to delete.", "No Project Selected", MessageButtons.OK, MessageImage.Warning);
+      await _messageBox.Show("Please select a project to delete.", "No Project Selected", MessageButtons.OK, MessageImage.Warning).ConfigureAwait(false);
       return;
     }
-    var result = _messageBox.Show($"Are you sure you want to delete the project '{project.ProjectName}'?", "Confirm Delete", MessageButtons.YesNo, MessageImage.Warning);
+    var result = await _messageBox.Show($"Are you sure you want to delete the project '{project.ProjectName}'?", "Confirm Delete", MessageButtons.YesNo, MessageImage.Warning).ConfigureAwait(false);
     if (result == MessageButtons.Yes)
     {
       await ProjectRepo.DeleteProject(project).ConfigureAwait(false);
     }
   }
-  private bool InvalidSettings()
+  public bool InvalidSettings()
   {
     if (string.IsNullOrWhiteSpace(_settings.ChatGptApiKey) && _settings.LLMProvider == LLMProvider.ChatGpt)
     {

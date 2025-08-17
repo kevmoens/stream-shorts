@@ -1,0 +1,19 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="alert @AlertClass" role="alert" style="display: @(IsVisible ? "block" : "none");">
+    @Message
+    @if (_visibleButtons == MessageButtons.YesNo)
+    {
+        <button type="button" class="btn btn-primary" @onclick="() => OnButtonClick(MessageButtons.Yes)">Yes</button>
+        <button type="button" class="btn btn-secondary" @onclick="() => OnButtonClick(MessageButtons.No)">No</button>
+    }
+    else if (_visibleButtons == MessageButtons.OK)
+    {
+        <button type="button" class="btn btn-primary" @onclick="() => OnButtonClick(MessageButtons.OK)">OK</button>
+    }
+    else if (_visibleButtons == MessageButtons.OKCancel)
+    {
+        <button type="button" class="btn btn-primary" @onclick="() => OnButtonClick(MessageButtons.OK)">OK</button>
+        <button type="button" class="btn btn-secondary" @onclick="() => OnButtonClick(MessageButtons.Cancel)">Cancel</button>
+    }
+</div>

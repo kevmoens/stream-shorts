@@ -30,15 +30,16 @@ public class AddProjectViewModel : INotifyPropertyChanged
   public ICommand LoadedCommand { get; set; }
   public ICommand AddProjectCommand { get; set; }
   public ICommand CancelCommand { get; set; }
-  public AddProjectViewModel(ProjectFolderRepo projectRepo, YouTubeDownload youTubeDownload, Project project, IMessageBox messageBox)
+  public AddProjectViewModel(ProjectFolderRepo projectRepo, YouTubeDownload youTubeDownload, Project project, IMessageBox messageBox, INavigationEvent navigationEvent)
   {
     LoadedCommand = new DelegateCommand(OnLoaded);
-    AddProjectCommand = new DelegateCommand(OnAddProject);
+    AddProjectCommand = new DelegateCommand(async () => await OnAddProject().ConfigureAwait(false));
     CancelCommand = new DelegateCommand(OnCancel);
     _projectRepo = projectRepo;
     _youTubeDownload = youTubeDownload;
     _project = project;
     _messageBox = messageBox;
+    _navigationEvent = navigationEvent;
     _youTubeUrlChanged += async (sender, args) => await OnValidateYouTubeUrl().ConfigureAwait(false);
   }
 
@@ -61,6 +62,7 @@ public class AddProjectViewModel : INotifyPropertyChanged
   private readonly YouTubeDownload _youTubeDownload;
   private readonly Project _project;
   private readonly IMessageBox _messageBox;
+  private readonly INavigationEvent _navigationEvent;
 
   public string ProjectName
   {
@@ -68,12 +70,12 @@ public class AddProjectViewModel : INotifyPropertyChanged
     set { _projectName = value; OnPropertyChanged(); }
   }
 
-  private void OnLoaded()
+  public void OnLoaded()
   {
     YouTubeUrl = string.Empty;
     ProjectName = string.Empty;
   }
-  private async Task OnValidateYouTubeUrl()
+  public async Task OnValidateYouTubeUrl()
   {
 #pragma warning disable CA1031 // Do not catch general exception types
     try
@@ -93,19 +95,19 @@ public class AddProjectViewModel : INotifyPropertyChanged
     }
     catch (UriFormatException)
     {
-      _messageBox.Show("Invalid YouTube URL format.", "Stream Shorts", MessageButtons.OK, MessageImage.None);
+      await _messageBox.Show("Invalid YouTube URL format.", "Stream Shorts", MessageButtons.OK, MessageImage.None).ConfigureAwait(false);
       YouTubeUrl = string.Empty;
       ProjectName = string.Empty;
     }
     catch (Exception ex)
     {
-      _messageBox.Show($"Error validating YouTube URL: {ex.Message}", "Stream Shorts", MessageButtons.OK, MessageImage.Error);
+      await _messageBox.Show($"Error validating YouTube URL: {ex.Message}", "Stream Shorts", MessageButtons.OK, MessageImage.Error).ConfigureAwait(false);
       YouTubeUrl = string.Empty;
       ProjectName = string.Empty;
     }
 #pragma warning restore CA1031 // Do not catch general exception types
   }
-  private async void OnAddProject()
+  public async Task OnAddProject()
   {
 
 #pragma warning disable CA1031 // Do not catch general exception types
@@ -119,7 +121,7 @@ public class AddProjectViewModel : INotifyPropertyChanged
       string projectName = string.Concat(ProjectName.Where(c => !invalidChars.Contains(c)));
       if (ProjectName != projectName)
       {
-        if (_messageBox.Show("Project name contained invalid characters.  They have been removed.", "Invalid Characters", MessageButtons.OKCancel, MessageImage.None) == MessageButtons.Cancel )
+        if (await _messageBox.Show("Project name contained invalid characters.  They have been removed.", "Invalid Characters", MessageButtons.OKCancel, MessageImage.None).ConfigureAwait(false) == MessageButtons.Cancel)
         {
           return;
         }
@@ -134,7 +136,7 @@ public class AddProjectViewModel : INotifyPropertyChanged
       DirectoryInfo dir = new(Path.Combine(WorkingDirectory.Current, ProjectName));
       if (dir.Exists)
       {
-        _messageBox.Show("Project already exists.", "Stream Shorts", MessageButtons.OK, MessageImage.Error);
+        await _messageBox.Show("Project already exists.", "Stream Shorts", MessageButtons.OK, MessageImage.Error).ConfigureAwait(false);
         return;
       }
       dir.Create();
@@ -145,16 +147,16 @@ public class AddProjectViewModel : INotifyPropertyChanged
       string json = JsonSerializer.Serialize(_project);
       await File.WriteAllTextAsync(Path.Combine(dir.FullName, "details.json"), json).ConfigureAwait(false);
       await _projectRepo.AddProject(_project).ConfigureAwait(false);
-      await NavigationEvent.Instance.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "New" }, { "Project", _project } }).ConfigureAwait(false);
+      await _navigationEvent.PublishEvent("ProjectDetails", new Dictionary<string, object> { { "Status", "New" }, { "Project", _project } }).ConfigureAwait(false);
     }
     catch (Exception ex)
     {
-      _messageBox.Show(ex.Message, "Stream Shorts", MessageButtons.OK, MessageImage.Error);
+      await _messageBox.Show(ex.Message, "Stream Shorts", MessageButtons.OK, MessageImage.Error).ConfigureAwait(false);
     }
 #pragma warning restore CA1031 // Do not catch general exception types
   }
   private async void OnCancel()
   {
-    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
 }

@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using StreamShorts.Library;
 using StreamShorts.MVVM;
+using StreamShorts.MVVM.Install;
 using StreamShorts.MVVM.Interfaces;
 using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
@@ -21,6 +22,8 @@ using StreamShorts.PC;
 using StreamShorts.UI;
 using StreamShorts.ViewModels;
 using StreamShorts.Views;
+
+using StreamShortsMVVM.Interfaces;
 
 
 namespace StreamShorts
@@ -69,8 +72,11 @@ namespace StreamShorts
       services.AddTransient<VideoWorkItemProcessor>();
       services.AddTransient(typeof(IFactory<>), typeof(ServiceProviderFactory<>));
 
+      services.AddTransient<OllamaVerification>();
       services.AddTransient<IMessageBox, UI.MessageBox>();
       services.AddTransient<IUiDispatcher, UiDispatcher>();
+      services.AddSingleton<INavigationEvent, NavigationEvent>();
+      services.AddSingleton<IEnvironment, StreamShorts.UI.Environments>();
 
       _serviceProvider = services.BuildServiceProvider();
 		}

@@ -26,6 +26,8 @@ public class InstallFFMpegViewModel : INotifyPropertyChanged
   public ICommand OpenHttpLinkCommand { get; }
 
   private string? _droppedZipFilePath;
+  private readonly INavigationEvent _navigationEvent;
+
   public string? DroppedZipFilePath
   {
     get => _droppedZipFilePath;
@@ -39,10 +41,11 @@ public class InstallFFMpegViewModel : INotifyPropertyChanged
     }
   }
 
-  public InstallFFMpegViewModel()
+  public InstallFFMpegViewModel(INavigationEvent navigationEvent)
   {
     DropCommand = new DelegateCommand<DragEventArgs>(OnDrop);
     OpenHttpLinkCommand = new DelegateCommand(OpenFFMpegLink);
+    _navigationEvent = navigationEvent;
   }
 
   private void OpenFFMpegLink()
@@ -95,7 +98,7 @@ public class InstallFFMpegViewModel : INotifyPropertyChanged
         MessageBox.Show("ffprobe.exe was not found in the extracted files.", "Missing ffprobe", MessageBoxButton.OK, MessageBoxImage.Warning);
         return;
       }
-      await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
+      await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
 
     }
   }

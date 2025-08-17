@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 namespace StreamShorts.MVVM.Interfaces;
 public interface IMessageBox
 {
-  MessageButtons Show(string message, string caption, MessageButtons buttons, MessageImage image);
+  Task<MessageButtons> Show(string message, string caption, MessageButtons buttons, MessageImage image);
 }

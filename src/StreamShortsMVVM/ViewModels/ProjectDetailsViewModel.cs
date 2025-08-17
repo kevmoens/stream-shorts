@@ -29,7 +29,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
   public ICommand PlayCommand { get; set; }
   public ICommand PauseCommand { get; set; }
   public ICommand StopCommand { get; set; }
-  public ProjectDetailsViewModel(VideoQueueManager queueManager, VideoWorkItem videoWorkItem, IMessageBox messageBox)
+  public ProjectDetailsViewModel(VideoQueueManager queueManager, VideoWorkItem videoWorkItem, IMessageBox messageBox, INavigationEvent navigationEvent)
   {
     BackCommand = new DelegateCommand(OnBack);
     OpenVideoCommand = new DelegateCommand(OnOpenVideo);
@@ -41,11 +41,13 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     _queueManager = queueManager;
     _videoWorkItem = videoWorkItem;
     _messageBox = messageBox;
+    _navigationEvent = navigationEvent;
   }
   private Project? _project;
   private readonly VideoQueueManager _queueManager;
   private readonly VideoWorkItem _videoWorkItem;
   private readonly IMessageBox _messageBox;
+  private readonly INavigationEvent _navigationEvent;
 
   public Project? Project
   {
@@ -94,9 +96,9 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     }
   }
 
-  public static async void OnBack()
+  public async void OnBack()
   {
-    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
   public void OnOpenVideo()
   {

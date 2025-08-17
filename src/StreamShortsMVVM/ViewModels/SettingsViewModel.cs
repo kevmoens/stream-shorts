@@ -1,16 +1,13 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Windows;
 using System.Windows.Input;
 
 using StreamShorts.MVVM.Install;
 using StreamShorts.Library;
 using StreamShorts.Library.Analysis;
 using StreamShorts.MVVM.MVVM;
-using StreamShorts.MVVM.Projects;
 using StreamShorts.MVVM.Interfaces;
 using StreamShortsMVVM.Interfaces;
 
@@ -34,19 +31,29 @@ public class SettingsViewModel : INotifyPropertyChanged
   private readonly IUiDispatcher _uiDispatcher;
   private readonly IMessageBox _messageBox;
   private readonly ISettingsCanSave _settingsCanSave;
+  private readonly INavigationEvent _navigationEvent;
+  private readonly OllamaVerification _ollamaVerification;
 
-  public SettingsViewModel(Settings settings, SettingsRepo settingsRepo, IUiDispatcher uiDispatcher, IMessageBox messageBox, ISettingsCanSave settingsCanSave)
+  public SettingsViewModel(Settings settings,
+                           SettingsRepo settingsRepo,
+                           IUiDispatcher uiDispatcher,
+                           IMessageBox messageBox,
+                           ISettingsCanSave settingsCanSave,
+                           INavigationEvent navigationEvent,
+                           OllamaVerification ollamaVerification)
   {
     _settings = settings;
     _settingsRepo = settingsRepo;
     _uiDispatcher = uiDispatcher;
     _messageBox = messageBox;
     _settingsCanSave = settingsCanSave;
+    _navigationEvent = navigationEvent;
+    _ollamaVerification = ollamaVerification;
     LoadedCommand = new DelegateCommand(OnLoaded);
     SaveCommand = new DelegateCommand(OnSave, CanSave);
     CancelCommand = new DelegateCommand(OnCancel);
     LLMProviderChangedCommand = new DelegateCommand(async() => await OnLLMProviderChanged().ConfigureAwait(false));
-    DownloadPhi4ModelCommand = new DelegateCommand(OnDownloadPhi4Model);
+    DownloadPhi4ModelCommand = new DelegateCommand(async() => await OnDownloadPhi4Model().ConfigureAwait(false));
 
 
   }
@@ -85,12 +92,12 @@ public class SettingsViewModel : INotifyPropertyChanged
     _settings.IncludeInsightfulClips = IncludeInsightfulClips;
     _settings.MaxClipLength = MaxClipLength;
     _settingsRepo.SaveSettings();
-    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
 
   private async void OnCancel()
   {
-    await NavigationEvent.Instance.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
+    await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
   private async Task OnLLMProviderChanged()
   {
@@ -102,7 +109,7 @@ public class SettingsViewModel : INotifyPropertyChanged
     {
       return;
     }
-    List<string>? models = await OllamaVerification.GetModels().ConfigureAwait(false);
+    List<string>? models = await _ollamaVerification.GetModels().ConfigureAwait(false);
     foreach (var model in models)
     {
       await _uiDispatcher.InvokeAsync(() =>
@@ -115,9 +122,9 @@ public class SettingsViewModel : INotifyPropertyChanged
       OnPropertyChanged("LLMProvider"); //Fire again because we want the converter to run
 #pragma warning restore CA1507 // Use nameof to express symbol names
   }
-  public void OnDownloadPhi4Model()
+  public async Task OnDownloadPhi4Model()
   {
-    var result = _messageBox.Show("Phi4:latest is a 9GB model.  This will take time to download.  Do you want to continue?", "Download Model", MessageButtons.YesNo, MessageImage.None);
+    var result = await _messageBox.Show("Phi4:latest is a 9GB model.  This will take time to download.  Do you want to continue?", "Download Model", MessageButtons.YesNo, MessageImage.None).ConfigureAwait(false);
     if (result == MessageButtons.Yes)
     {
       return;
@@ -139,8 +146,8 @@ public class SettingsViewModel : INotifyPropertyChanged
         IsDownloadingPhi4 = true;
         process.StartInfo = startInfo;
         process.Start();
-        process.WaitForExit();
-        _messageBox.Show("Phi4:Latest is now downloaded, restarting app.", "Stream Shorts", MessageButtons.OK, MessageImage.None);
+        await process.WaitForExitAsync().ConfigureAwait(false);
+        await _messageBox.Show("Phi4:Latest is now downloaded, restarting app.", "Stream Shorts", MessageButtons.OK, MessageImage.None).ConfigureAwait(false);
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
         {
           FileName = Environment.ProcessPath!,

@@ -50,6 +50,7 @@ namespace StreamShorts.MVVM.ViewModels
     private readonly SettingsRepo _settingsRepo;
     private VideoQueueManager _videoQueueManager;
     private readonly IUiDispatcher _uiDispatcher;
+    private readonly INavigationEvent _navigationEvent;
 
     public VideoQueueManager VideoQueueManager
     {
@@ -62,15 +63,17 @@ namespace StreamShorts.MVVM.ViewModels
                                IFactory<IPage> pageFactory,
                                SettingsRepo settingsRepo,
                                VideoQueueManager videoQueueManager,
-                               IUiDispatcher uiDispatcher
+                               IUiDispatcher uiDispatcher,
+                               INavigationEvent navigationEvent
                                )
     {
       _pageFactory = pageFactory;
       _settingsRepo = settingsRepo;
       _videoQueueManager = videoQueueManager;
       _uiDispatcher = uiDispatcher;
+      _navigationEvent = navigationEvent;
       Content = existingProjectsPage;
-      NavigationEvent.Instance.SubscribeToEvent(OnNavigationEvent);
+      _navigationEvent.SubscribeToEvent(OnNavigationEvent);
       LoadedCommand = new DelegateCommand(OnLoaded);
       ClosingCommand = new DelegateCommand(OnClosing);
     }
@@ -81,7 +84,7 @@ namespace StreamShorts.MVVM.ViewModels
       if (await FFMpegVerification.IsFFMpegInstalled().ConfigureAwait(false) == false)
       {
         // Handle FFMpeg not installed
-        await NavigationEvent.Instance.PublishEvent("InstallFFMpeg", []).ConfigureAwait(false);
+        await _navigationEvent.PublishEvent("InstallFFMpeg", []).ConfigureAwait(false);
       }
     }
 
@@ -89,7 +92,7 @@ namespace StreamShorts.MVVM.ViewModels
     {
     }
 
-    private async Task OnNavigationEvent( NavigationEventArgs? e)
+    private async Task OnNavigationEvent(NavigationEventArgs? e)
     {
       if (e == null) return;
 

@@ -10,13 +10,18 @@ using System.Threading.Tasks;
 using StreamShorts.Library;
 using StreamShorts.MVVM.Interfaces;
 
+using StreamShortsMVVM.Interfaces;
+
 namespace StreamShorts.MVVM.Projects;
 public class ProjectFolderRepo
 {
   private readonly IUiDispatcher _uiDispatcher;
-  public ProjectFolderRepo(IUiDispatcher uiDispatcher) 
+  private readonly IEnvironment _environment;
+
+  public ProjectFolderRepo(IUiDispatcher uiDispatcher, IEnvironment environment) 
   {
     _uiDispatcher = uiDispatcher;
+    _environment = environment;
   }
   private readonly ObservableCollection<Project> _projects = [];
   public ObservableCollection<Project> Projects { get { return _projects; } }
@@ -101,13 +106,21 @@ public class ProjectFolderRepo
           }
         }
       }
-      loadProject.Preview = "preview.jpg";
-
-      await _uiDispatcher.InvokeAsync(() =>
+      if (_environment.Environment == Environments.WPF)
       {
-        _projects.Add(loadProject);
-        return Task.CompletedTask;
-      }).ConfigureAwait(false);
+        loadProject.Preview = "preview.jpg";
+      }
+      else
+      {
+        byte[] imageBytes = await File.ReadAllBytesAsync(Path.Combine(subDir.FullName, "preview.jpg")).ConfigureAwait(false);
+        loadProject.Preview = $"data:image/png;base64,{Convert.ToBase64String(imageBytes)}";
+      }
+
+        await _uiDispatcher.InvokeAsync(() =>
+        {
+          _projects.Add(loadProject);
+          return Task.CompletedTask;
+        }).ConfigureAwait(false);
     }
     return;
   }
