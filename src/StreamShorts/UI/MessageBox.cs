@@ -9,7 +9,7 @@ using StreamShorts.MVVM.Interfaces;
 namespace StreamShorts.UI;
 public class MessageBox : IMessageBox
 {
-  public MessageButtons Show(string message, string caption, MessageButtons buttons, MessageImage image)
+  public Task<MessageButtons> Show(string message, string caption, MessageButtons buttons, MessageImage image)
   {
     System.Windows.MessageBoxImage msgImage = image switch
     {
@@ -28,15 +28,15 @@ public class MessageBox : IMessageBox
     switch (result)
     {
       case System.Windows.MessageBoxResult.OK:
-        return MessageButtons.OK;
+        return Task.FromResult(MessageButtons.OK);
       case System.Windows.MessageBoxResult.Cancel:
-        return MessageButtons.Cancel;
+        return Task.FromResult(MessageButtons.Cancel);
       case System.Windows.MessageBoxResult.Yes:
-        return MessageButtons.Yes;
+        return Task.FromResult(MessageButtons.Yes);
       case System.Windows.MessageBoxResult.No:
-        return MessageButtons.No;
+        return Task.FromResult(MessageButtons.No);
       default:
-        return MessageButtons.OK;
+        return Task.FromResult(MessageButtons.OK);
     }
   }
 }
