@@ -1,7 +1,65 @@
-﻿@page "/ProjectDetails"
+﻿@page "/ProjectDetails/{NavigationId:guid}"
+@inject ProjectDetailsViewModel _viewModel
+@inject IJSRuntime JS
+<MessageBox @ref="_messageBoxRef" />
 
-<h3>ProjectDetails</h3>
+<div class="d-flex flex-row align-items-center justify-content-between mb-2">
+    <button class="btn btn-primary" @onclick="OnBack">
+        Back
+    </button>
+</div>
 
-@code {
+@if (_viewModel.Project != null)
+{
+    <div class="d-flex flex-row vh-100">
+        <div class="flex-grow-1 border-end p-3" style="min-width: 200px;">
 
+            <img src="@_viewModel.Project.Preview" class="card-img-top" style="height:200px;object-fit:scale-down; " alt="Project Thumbnail" />
+
+            <a href="@_viewModel.Project.VideoUri" target="_blank" style="display: block; margin-bottom: 1rem;">
+                @_viewModel.Project.VideoUri
+            </a>
+
+            <div>
+                Size: @((_viewModel.Project.TotalSizeInBytes / (1024.0 * 1024.0)).ToString("F2")) MB
+            </div>
+        </div>
+        @if (_viewModel.Project.Files.Count == 0 && _viewModel.Project.IsProcessing == false)
+        {
+            <div class="flex-grow-1" style="align-items: center; justify-items: center;">
+                <button class="btn btn-primary" @onclick="async() => await _viewModel.OnProcess().ConfigureAwait(false)">Process</button>
+            </div>
+        }
+        else
+        {
+            <div class="flex-grow-1 p-3 d-flex flex-column h-100" style="min-width: 300px;">
+                <!-- Top half: Scrollable list -->
+                <div id="scrollable-list" style="flex: 1 1 0; overflow-y: auto; min-height: 0;">
+
+                    <!-- Example scrollable list items -->
+                    <ul class="list-group">
+                        @foreach (var item in _viewModel.Project.Files)
+                        {
+                            <li class="list-group-item">
+                                <div @onclick="async () => await OnSelectProjectFile(item!).ConfigureAwait(false)">
+                                    <div>@item.Name</div>
+                                    <div>@item.Description</div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+
+                </div>
+
+                <!-- Splitter -->
+                <div id="splitter" style="height: 6px; background: #e0e0e0; cursor: row-resize;"></div>
+
+                <!-- Bottom half: Video player -->
+                <div id="video-player" style="flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center;">
+                    <MediaElement @ref="_mediaElement" Source="@_viewModel.VideoSource" />
+                </div>
+            </div>
+        }
+    </div>
 }
+

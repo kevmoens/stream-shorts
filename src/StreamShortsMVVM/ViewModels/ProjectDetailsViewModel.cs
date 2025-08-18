@@ -31,7 +31,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
   public ICommand StopCommand { get; set; }
   public ProjectDetailsViewModel(VideoQueueManager queueManager, VideoWorkItem videoWorkItem, IMessageBox messageBox, INavigationEvent navigationEvent)
   {
-    BackCommand = new DelegateCommand(OnBack);
+    BackCommand = new DelegateCommand(async() => await OnBack().ConfigureAwait(false));
     OpenVideoCommand = new DelegateCommand(OnOpenVideo);
     ProcessCommand = new DelegateCommand(async () => await OnProcess().ConfigureAwait(false));
     OpenFileCommand = new DelegateCommand<IProjectFileMediaElement>(OnOpenFile);
@@ -46,9 +46,13 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
   private Project? _project;
   private readonly VideoQueueManager _queueManager;
   private readonly VideoWorkItem _videoWorkItem;
-  private readonly IMessageBox _messageBox;
   private readonly INavigationEvent _navigationEvent;
-
+  private IMessageBox _messageBox;
+  public IMessageBox MessageBox
+  {
+    get { return _messageBox; }
+    set { _messageBox = value; OnPropertyChanged(); }
+  }
   public Project? Project
   {
     get => _project;
@@ -96,7 +100,7 @@ public class ProjectDetailsViewModel : INotifyPropertyChanged, IPageNavigationAw
     }
   }
 
-  public async void OnBack()
+  public async Task OnBack()
   {
     await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }

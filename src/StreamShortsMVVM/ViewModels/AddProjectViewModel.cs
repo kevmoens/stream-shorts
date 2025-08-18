@@ -17,6 +17,8 @@ using StreamShorts.MVVM.MVVM;
 using StreamShorts.MVVM.Projects;
 using StreamShorts.MVVM.YouTube;
 
+using StreamShortsMVVM.Interfaces;
+
 namespace StreamShorts.MVVM.ViewModels;
 public class AddProjectViewModel : INotifyPropertyChanged
 {
@@ -30,16 +32,23 @@ public class AddProjectViewModel : INotifyPropertyChanged
   public ICommand LoadedCommand { get; set; }
   public ICommand AddProjectCommand { get; set; }
   public ICommand CancelCommand { get; set; }
-  public AddProjectViewModel(ProjectFolderRepo projectRepo, YouTubeDownload youTubeDownload, Project project, IMessageBox messageBox, INavigationEvent navigationEvent)
+  public AddProjectViewModel(ProjectFolderRepo projectRepo,
+                             YouTubeDownload youTubeDownload,
+                             Project project,
+                             IMessageBox messageBox,
+                             INavigationEvent navigationEvent,
+                             IEnvironment environment
+    )
   {
     LoadedCommand = new DelegateCommand(OnLoaded);
     AddProjectCommand = new DelegateCommand(async () => await OnAddProject().ConfigureAwait(false));
-    CancelCommand = new DelegateCommand(OnCancel);
+    CancelCommand = new DelegateCommand(async () => await OnCancel().ConfigureAwait(false));
     _projectRepo = projectRepo;
     _youTubeDownload = youTubeDownload;
     _project = project;
     _messageBox = messageBox;
     _navigationEvent = navigationEvent;
+    _environment = environment;
     _youTubeUrlChanged += async (sender, args) => await OnValidateYouTubeUrl().ConfigureAwait(false);
   }
 
@@ -61,9 +70,14 @@ public class AddProjectViewModel : INotifyPropertyChanged
   private readonly ProjectFolderRepo _projectRepo;
   private readonly YouTubeDownload _youTubeDownload;
   private readonly Project _project;
-  private readonly IMessageBox _messageBox;
   private readonly INavigationEvent _navigationEvent;
-
+  private readonly IEnvironment _environment;
+  private IMessageBox _messageBox;
+  public IMessageBox MessageBox
+  {
+    get { return _messageBox; }
+    set { _messageBox = value; OnPropertyChanged(); }
+  }
   public string ProjectName
   {
     get { return _projectName; }
@@ -143,7 +157,13 @@ public class AddProjectViewModel : INotifyPropertyChanged
       string previewPath = Path.Combine(dir.FullName, "preview.jpg");
       byte[] previewBytes = await _youTubeDownload.GetThumbnail().ConfigureAwait(false);
       await File.WriteAllBytesAsync(previewPath, previewBytes).ConfigureAwait(false);
-      _project.Preview = "preview.jpg";
+      if (_environment.Environment == Environments.WPF)
+      { 
+        _project.Preview = "preview.jpg";
+      } else
+      {
+        _project.Preview = $"data:image/png;base64,{Convert.ToBase64String(previewBytes)}";
+      }
       string json = JsonSerializer.Serialize(_project);
       await File.WriteAllTextAsync(Path.Combine(dir.FullName, "details.json"), json).ConfigureAwait(false);
       await _projectRepo.AddProject(_project).ConfigureAwait(false);
@@ -155,7 +175,7 @@ public class AddProjectViewModel : INotifyPropertyChanged
     }
 #pragma warning restore CA1031 // Do not catch general exception types
   }
-  private async void OnCancel()
+  public async Task OnCancel()
   {
     await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }

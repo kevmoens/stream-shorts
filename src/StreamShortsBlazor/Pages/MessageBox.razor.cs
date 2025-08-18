@@ -49,7 +49,7 @@ public partial class MessageBox
         break;
     }
     IsVisible = true;
-    StateHasChanged();
+    await InvokeAsync(()=> StateHasChanged()).ConfigureAwait(false);
     await _taskCompletionSource.Task.ConfigureAwait(false);
     _taskCompletionSource = null;
     return _result;

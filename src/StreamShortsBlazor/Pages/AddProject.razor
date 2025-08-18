@@ -1,6 +1,24 @@
 ﻿@page "/AddProject"
-<h3>AddProject</h3>
+@inject AddProjectViewModel _viewModel
 
-@code {
+<MessageBox @ref="_messageBoxRef" />
+<div class="d-flex flex-column" style="align-items: center; justify-content: center;">
 
-}
+    <h3 class="row">Add Project</h3>
+
+    <div style="flex: 1 1 0;">
+        <label for="youTubeUrl">YouTube URL:</label>
+        <input type="text" id="youTubeUrl" @bind="_viewModel.YouTubeUrl"></input>
+    </div>
+
+    <div style="flex: 1 1 0;">
+        <label for="projectName">Project Name:</label>
+        <input type="text" id="projectName" @bind="_viewModel.ProjectName" />
+    </div>
+</div>
+
+
+<div class="d-flex flex-row align-items-center justify-content-between mb-2">
+    <button class="btn btn-primary" @onclick="async () => await OnAddProject().ConfigureAwait(false)">Create Project</button>
+    <button class="btn btn-primary" @onclick="async () => await _viewModel.OnCancel().ConfigureAwait(false)">Cancel</button>
+</div>

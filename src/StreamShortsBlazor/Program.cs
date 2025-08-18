@@ -39,6 +39,7 @@ builder.Services.AddTransient<IUiDispatcher, UiDispatcher>();
 builder.Services.AddHttpClient();
 builder.Services.AddTransient<IMessageBox, MessageBoxWrapper>();
 builder.Services.AddScoped<IEnvironment, StreamShortsBlazor.UI.Environments>();
+builder.Services.AddScoped<NavigationPersistenceAware>();
 var app = builder.Build();
 
 app.Services.GetService<SettingsRepo>()?.LoadSettings();
