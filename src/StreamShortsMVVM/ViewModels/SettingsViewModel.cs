@@ -29,10 +29,16 @@ public class SettingsViewModel : INotifyPropertyChanged
   public ICommand DownloadPhi4ModelCommand { get; set; }
   private readonly SettingsRepo _settingsRepo;
   private readonly IUiDispatcher _uiDispatcher;
-  private readonly IMessageBox _messageBox;
+ 
   private readonly ISettingsCanSave _settingsCanSave;
   private readonly INavigationEvent _navigationEvent;
   private readonly OllamaVerification _ollamaVerification;
+  private IMessageBox _messageBox;
+  public IMessageBox MessageBox
+  {
+    get { return _messageBox; }
+    set { _messageBox = value; OnPropertyChanged(); }
+  }
 
   public SettingsViewModel(Settings settings,
                            SettingsRepo settingsRepo,
@@ -49,15 +55,15 @@ public class SettingsViewModel : INotifyPropertyChanged
     _settingsCanSave = settingsCanSave;
     _navigationEvent = navigationEvent;
     _ollamaVerification = ollamaVerification;
-    LoadedCommand = new DelegateCommand(OnLoaded);
-    SaveCommand = new DelegateCommand(OnSave, CanSave);
-    CancelCommand = new DelegateCommand(OnCancel);
+    LoadedCommand = new DelegateCommand(async() => await OnLoaded().ConfigureAwait(false));
+    SaveCommand = new DelegateCommand(async() => await OnSave().ConfigureAwait(false), CanSave);
+    CancelCommand = new DelegateCommand(async() => await OnCancel().ConfigureAwait(false));
     LLMProviderChangedCommand = new DelegateCommand(async() => await OnLLMProviderChanged().ConfigureAwait(false));
     DownloadPhi4ModelCommand = new DelegateCommand(async() => await OnDownloadPhi4Model().ConfigureAwait(false));
 
 
   }
-  private async void OnLoaded()
+  public async Task OnLoaded()
   {
     // Initialize properties from settings
     LLMProvider = _settings.LLMProvider;
@@ -76,7 +82,7 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     await OnLLMProviderChanged().ConfigureAwait(false);
   }
-  private async void OnSave()
+  public async Task OnSave()
   {
     _settings.LLMProvider = LLMProvider;
     _settings.OllamaModelId = OllamaModelId;
@@ -95,11 +101,11 @@ public class SettingsViewModel : INotifyPropertyChanged
     await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
 
-  private async void OnCancel()
+  public async Task OnCancel()
   {
     await _navigationEvent.PublishEvent("ExistingProjects", []).ConfigureAwait(false);
   }
-  private async Task OnLLMProviderChanged()
+  public async Task OnLLMProviderChanged()
   {
     if (LLMProvider != LLMProvider.Ollama)
     {
@@ -162,7 +168,7 @@ public class SettingsViewModel : INotifyPropertyChanged
     }
 #pragma warning restore CA1031 // Do not catch general exception types
   }
-  protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+  public void OnPropertyChanged([CallerMemberName] string propertyName = "")
   {
     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
   }

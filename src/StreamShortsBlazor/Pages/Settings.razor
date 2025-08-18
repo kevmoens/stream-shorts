@@ -1,6 +1,190 @@
 ﻿@page "/Settings"
-<h3>Settings</h3>
+@using System.ComponentModel
+@inject SettingsViewModel _viewModel
+
+<MessageBox @ref="_messageBoxRef" />
+<div style="height: calc(100vh - 50px)">
+    <div class="settings-container">
+        <div class="settings-title">Settings</div>
+
+        <div class="settings-row">
+            <label class="settings-label">LLM Provider:</label>
+            <select class="settings-select" @bind="_viewModel.LLMProvider">
+                @foreach (var provider in _viewModel.LLMProviders)
+                {
+                    <option value="@provider">@provider</option>
+                }
+            </select>
+        </div>
+
+        @if (_viewModel.LLMProvider == StreamShorts.Library.Analysis.LLMProvider.Ollama)
+        {
+            <div class="settings-row">
+                <label class="settings-label">Ollama Model Id:</label>
+                <select class="settings-select-wide" @bind="_viewModel.OllamaModelId">
+                    @foreach (var model in _viewModel.OllamaModels)
+                    {
+                        <option value="@model">@model</option>
+                    }
+                </select>
+                @if (_viewModel.OllamaModels.Contains("phi4:latest", StringComparer.OrdinalIgnoreCase) == false)
+                {
+                    <button class="settings-button" @onclick="async () => await _viewModel.OnDownloadPhi4Model().ConfigureAwait(false)">Download Phi4 Model</button>
+                }
+            </div>
+        }
+
+        @if (_viewModel.LLMProvider == StreamShorts.Library.Analysis.LLMProvider.ChatGpt)
+        {
+            <div class="settings-row">
+                <label class="settings-label">ChatGpt Api Key:</label>
+                <input class="settings-input-wide" placeholder="ChatGpt Api Key" @bind="_viewModel.ChatGptApiKey" />
+            </div>
+        }
+
+        @if (_viewModel.LLMProvider == StreamShorts.Library.Analysis.LLMProvider.Gemini)
+        {
+            <div class="settings-row">
+                <label class="settings-label">Gemini Api Key:</label>
+                <input class="settings-input-wide" placeholder="Gemini Api Key" @bind="_viewModel.GeminiApiKey" />
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Gemini Model Id:</label>
+                <input class="settings-input-wide" placeholder="Gemini Model Id" @bind="_viewModel.GeminiModelId" />
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Gemini Endpoint:</label>
+                <input class="settings-input-wide" placeholder="Gemini Endpoint" @bind="_viewModel.GeminiEndpoint" />
+            </div>
+        }
+
+        <div class="settings-row">
+            <label class="settings-label">Batch Size:</label>
+            <input class="settings-input-short" placeholder="Batch Size" @bind="_viewModel.BatchSize" />
+        </div>
+        <div class="settings-row">
+            <label class="settings-label">LLM Retries:</label>
+            <input class="settings-input-short" placeholder="LLM Retries" @bind="_viewModel.LLMRetries" />
+        </div>
+        <div class="settings-row">
+            <label class="settings-label">LLM Timeout Minutes:</label>
+            <input class="settings-input-short" placeholder="LLM Timeout Minutes" @bind="_viewModel.LLMTimeoutMinutes" />
+        </div>
+
+        <div class="settings-row">
+            <input type="checkbox" class="settings-checkbox" @bind="_viewModel.IncludeInformativeClips" />
+            <label>Include Informative Clips</label>
+        </div>
+        <div class="settings-row">
+            <input type="checkbox" class="settings-checkbox" @bind="_viewModel.IncludeFunnyClips" />
+            <label>Include Funny Clips</label>
+        </div>
+        <div class="settings-row">
+            <input type="checkbox" class="settings-checkbox" @bind="_viewModel.IncludeInsightfulClips" />
+            <label>Include Insightful Clips</label>
+        </div>
+
+        <div class="settings-row">
+            <label class="settings-label">Max Clip Length:</label>
+            <input class="settings-input-short" placeholder="Max Clip Length" @bind="_viewModel.MaxClipLength" />
+        </div>
+
+        <div class="settings-actions">
+            <button class="settings-button" @onclick="async () => await _viewModel.OnSave().ConfigureAwait(false)">Save</button>
+            <button class="settings-button" @onclick="async () => await _viewModel.OnCancel().ConfigureAwait(false)">Cancel</button>
+        </div>
+    </div>
+</div>
+<StatusBar />
 
 @code {
+    private MessageBox? _messageBoxRef;
 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync().ConfigureAwait(false);
+        await _viewModel.OnLoaded().ConfigureAwait(false);
+        ((MessageBoxWrapper)_viewModel.MessageBox).MessageBoxComponent = _messageBoxRef;
+        _viewModel.PropertyChanged += async (object? o, PropertyChangedEventArgs propChanged) => await OnPropertyChanged(o, propChanged).ConfigureAwait(false);
+    }
+    public async Task OnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SettingsViewModel.LLMProvider))
+        {
+            await OnLLMProviderChanged().ConfigureAwait(false);
+        }
+        else
+        {
+            StateHasChanged();
+        }
+    }
+    public async Task OnLLMProviderChanged()
+    {
+        await _viewModel.OnLLMProviderChanged().ConfigureAwait(false);
+        StateHasChanged();
+    }
 }
+
+<style>
+
+    .settings-container {
+        margin: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .settings-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .settings-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .settings-label {
+        width: 150px;
+        margin-right: 10px;
+        font-weight: 500;
+    }
+
+    .settings-select, .settings-input-wide, .settings-select-wide {
+        width: 200px;
+        padding: 4px 8px;
+        font-size: 16px;
+    }
+
+    .settings-select-wide, .settings-input-wide {
+        width: 300px;
+    }
+
+    .settings-input-short {
+        width: 100px;
+        padding: 4px 8px;
+        font-size: 16px;
+    }
+
+    .settings-checkbox {
+        margin-right: 10px;
+    }
+
+    .settings-button {
+        width: 100px;
+        margin-top: 20px;
+        margin-right: 20px;
+        padding: 6px 0;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    .settings-actions {
+        display: flex;
+        flex-direction: row;
+        margin-top: 10px;
+    }
+</style>

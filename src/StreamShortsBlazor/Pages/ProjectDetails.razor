@@ -3,7 +3,7 @@
 @inject IJSRuntime JS
 <MessageBox @ref="_messageBoxRef" />
 
-<div class="d-flex flex-row align-items-center justify-content-between mb-2">
+<div class="d-flex flex-row align-items-center justify-content-between mb-2" style="height:30px">
     <button class="btn btn-primary" @onclick="OnBack">
         Back
     </button>
@@ -11,7 +11,7 @@
 
 @if (_viewModel.Project != null)
 {
-    <div class="d-flex flex-row vh-100">
+    <div class="d-flex flex-row" style="height: calc(100vh - 70px)">
         <div class="flex-grow-1 border-end p-3" style="min-width: 200px;">
 
             <img src="@_viewModel.Project.Preview" class="card-img-top" style="height:200px;object-fit:scale-down; " alt="Project Thumbnail" />
@@ -63,3 +63,4 @@
     </div>
 }
 
+<StatusBar />

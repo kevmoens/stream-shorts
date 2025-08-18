@@ -1,0 +1,20 @@
+﻿@inject VideoQueueManager? _videoQueueManager
+<div style="background-color: #AAAAAA; color: white;width: 100vw; height:30px;">
+    @_videoQueueManager?.Message
+</div>
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (_videoQueueManager == null)
+            {
+                return;
+            }
+            _videoQueueManager.PropertyChanged += async (s, a) =>
+            {
+                await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+            };
+        }
+    }
+}

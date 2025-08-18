@@ -3,32 +3,37 @@
 @inject ExistingProjectsViewModel _viewModel
 
 <MessageBox @ref="_messageBoxRef" />
-<div class="d-flex flex-row align-items-center justify-content-between mb-2">
+<div class="d-flex flex-row align-items-center justify-content-between mb-2" style="height:30px;">
     <button class="btn btn-primary" @onclick="OnSettingsClick">
         Settings
     </button>
     <button class="btn btn-primary" @onclick="OnAddProjectClick">Add Project</button>
 </div>
 
-<div class="row">
-    @foreach (var project in _viewModel.ProjectRepo.Projects)
-    {
-        <div class="col-md-3 mb-4">
-            <div class="card h-100">
-                <img src="@project.Preview" class="card-img-top" style="height:180px;object-fit:cover;" alt="Project Thumbnail" />
-                <div class="card-body p-2">
-                    <a href="@project.VideoUri" target="_blank" class="card-title h6 d-block">@project.ProjectName</a>
-                    <div class="text-muted small">@((project.TotalSizeInBytes / (1024.0 * 1024.0)).ToString("F2")) mb</div>
-                </div>
-                <div class="card-footer d-flex justify-content-between p-2">
-                    <button class="btn btn-light" title="Delete" @onclick="() => OnDeleteProjectClick(project)">
-                        Delete
-                    </button>
-                    <button class="btn btn-light" title="Edit" @onclick="() => OnEditProjectClick(project)">
-                        Edit
-                    </button>
+<div style="height: calc(100vh - 80px)">
+
+    <div class="row">
+        @foreach (var project in _viewModel.ProjectRepo.Projects)
+        {
+            <div class="col-md-3 mb-4">
+                <div class="card h-100">
+                    <img src="@project.Preview" class="card-img-top" style="height:180px;object-fit:cover;" alt="Project Thumbnail" />
+                    <div class="card-body p-2">
+                        <a href="@project.VideoUri" target="_blank" class="card-title h6 d-block">@project.ProjectName</a>
+                        <div class="text-muted small">@((project.TotalSizeInBytes / (1024.0 * 1024.0)).ToString("F2")) mb</div>
+                    </div>
+                    <div class="card-footer d-flex justify-content-between p-2">
+                        <button class="btn btn-light" title="Delete" @onclick="() => OnDeleteProjectClick(project)">
+                            Delete
+                        </button>
+                        <button class="btn btn-light" title="Edit" @onclick="() => OnEditProjectClick(project)">
+                            Edit
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
+
+<StatusBar />
