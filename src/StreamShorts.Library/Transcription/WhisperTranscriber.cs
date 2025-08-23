@@ -40,9 +40,26 @@ public sealed class WhisperTranscriber : ITranscriber, IDisposable
 
   public async IAsyncEnumerable<TranscriptionSegment> TranscribeAsync(Stream audio, [EnumeratorCancellation] CancellationToken cancellationToken)
   {
-    
+
     var segmentDuration = _settings.MaxClipLength ?? TimeSpan.FromSeconds(30);
     var wavStream = _audioService.ConvertMp3ToWav16(audio);
+    var tempWaveFile = System.IO.Path.Combine(System.Environment.CurrentDirectory, "temp.wav");
+    System.Console.WriteLine(tempWaveFile);
+#pragma warning disable CA1031 // Do not catch general exception types
+
+    try
+    {
+      using (var fileStream = new System.IO.FileStream(tempWaveFile, System.IO.FileMode.Create, System.IO.FileAccess.Write))
+      {
+        await wavStream.CopyToAsync(fileStream, cancellationToken).ConfigureAwait(false);
+      }
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"Error writing WAV file: {ex.Message}");
+    }
+#pragma warning restore CA1031 // Do not catch general exception types
+
     var numberOfSegments = _audioService.GetNumberOfWavSegments(wavStream, segmentDuration);
 
     foreach (var segmentNumber in Enumerable.Range(0, numberOfSegments))

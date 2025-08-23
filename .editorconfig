@@ -199,6 +199,9 @@ csharp_style_prefer_unbound_generic_type_in_nameof = true:suggestion
 dotnet_diagnostic.CA1515.severity = none
 dotnet_diagnostic.CA1824.severity = none
 
+# CA1031: Do not catch general exception types
+dotnet_diagnostic.CA1031.severity = silent
+
 [*.{cs,vb}]
 
 # Naming rules

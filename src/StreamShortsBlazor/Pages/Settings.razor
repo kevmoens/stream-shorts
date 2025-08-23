@@ -24,7 +24,7 @@
                 <select class="settings-select-wide" @bind="_viewModel.OllamaModelId">
                     @foreach (var model in _viewModel.OllamaModels)
                     {
-                        <option value="@model">@model</option>
+                        <option value="@model.ToString()">@model</option>
                     }
                 </select>
                 @if (_viewModel.OllamaModels.Contains("phi4:latest", StringComparer.OrdinalIgnoreCase) == false)
@@ -121,7 +121,7 @@
     public async Task OnLLMProviderChanged()
     {
         await _viewModel.OnLLMProviderChanged().ConfigureAwait(false);
-        StateHasChanged();
+        await InvokeAsync(() => StateHasChanged()).ConfigureAwait(false);
     }
 }
 
