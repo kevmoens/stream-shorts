@@ -38,9 +38,14 @@ internal sealed class NAudioService : IAudioService
           stream.CopyTo(mp3Stream);
         }
         ConvertMp3ToWav16(tempMp3File);
+        var memStream = new MemoryStream();
+        Thread.Sleep(10000);
         //Read WAV file
-        var fileStream = new FileStream(tempWavFile, FileMode.Open, FileAccess.Read);
-        return fileStream;
+        using (var fileStream = new FileStream(tempWavFile, FileMode.Open, FileAccess.Read))
+        {
+          fileStream.CopyTo(memStream);
+        }
+        return memStream;
       }
       finally
       {
@@ -109,22 +114,28 @@ internal sealed class NAudioService : IAudioService
       wavStream = tempStream;
     }
 
+    string tempWaveFile = Path.Combine(System.Environment.CurrentDirectory, "temp.wav");
     try
     {
       wavStream.Seek(0, SeekOrigin.Begin); // Ensure stream is at the beginning for analysis
-      string tempWaveFile = Path.Combine(System.Environment.CurrentDirectory, "temp.wav");
       using var fileStream = new FileStream(tempWaveFile, FileMode.Create, FileAccess.Write);
       wavStream.CopyTo(fileStream);
       fileStream.Seek(0, SeekOrigin.Begin);
-
       var mediaInfo = FFMpegCore.FFProbe.Analyse(tempWaveFile);
-      File.Delete(tempWaveFile);
+
       return mediaInfo.Duration;
     }
     catch (FFMpegCore.Exceptions.FFProbeException ex)
     {
       Console.WriteLine($"FFProbe error analyzing WAV stream: {ex.Message}");
       return TimeSpan.Zero;
+    }
+    finally
+    {
+      if (File.Exists(tempWaveFile))
+      {
+        File.Delete(tempWaveFile);
+      }
     }
   }
   public Stream GetWavSegment(Stream wavStream, int segmentNumber, TimeSpan segmentDuration)

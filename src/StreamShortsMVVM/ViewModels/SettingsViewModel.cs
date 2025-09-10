@@ -69,6 +69,11 @@ public class SettingsViewModel : INotifyPropertyChanged
     LLMProvider = _settings.LLMProvider;
     OllamaModelId = _settings.OllamaModelId;
     ChatGptApiKey = _settings.ChatGptApiKey;
+    ChatGptModelID = _settings.ChatGptModelID;
+    AzureOpenAIApiKey = _settings.AzureOpenAIApiKey;
+    AzureOpenAIModelID = _settings.AzureOpenAIModelID;
+    AzureOpenAIEndPoint = _settings.AzureOpenAIEndPoint;
+    AzureOpenAIDeploymentName = _settings.AzureOpenAIDeploymentName;
     BatchSize = _settings.BatchSize;
     GeminiApiKey = _settings.GeminiApiKey;
     GeminiModelId = _settings.GeminiModelId;
@@ -87,6 +92,11 @@ public class SettingsViewModel : INotifyPropertyChanged
     _settings.LLMProvider = LLMProvider;
     _settings.OllamaModelId = OllamaModelId;
     _settings.ChatGptApiKey = ChatGptApiKey;
+    _settings.ChatGptModelID = ChatGptModelID;
+    _settings.AzureOpenAIApiKey = _azureOpenAIApiKey;
+    _settings.AzureOpenAIModelID = _azureOpenAIModelID;
+    _settings.AzureOpenAIEndPoint = _azureOpenEndPoint;
+    _settings.AzureOpenAIDeploymentName = _azureOpenDeploymentName;
     _settings.BatchSize = BatchSize;
     _settings.GeminiApiKey = GeminiApiKey;
     _settings.GeminiModelId = GeminiModelId;
@@ -182,7 +192,8 @@ public class SettingsViewModel : INotifyPropertyChanged
     {
       return new ObservableCollection<LLMProvider>([LLMProvider.ChatGpt,
         LLMProvider.Ollama,
-        LLMProvider.Gemini
+        LLMProvider.Gemini,
+        LLMProvider.AzureOpenAI
       ]);
     }
   }
@@ -214,6 +225,14 @@ public class SettingsViewModel : INotifyPropertyChanged
     get => _chatGptApiKey;
     set { _chatGptApiKey = value; OnPropertyChanged(); }
   }
+  private string? _chatGPTModelID;
+
+  public string? ChatGptModelID
+  {
+    get { return _chatGPTModelID; }
+    set { _chatGPTModelID = value; OnPropertyChanged(); }
+  }
+
   private int _batchSize;
   public int BatchSize
   {
@@ -237,6 +256,43 @@ public class SettingsViewModel : INotifyPropertyChanged
   {
     get => _geminiEndpoint;
     set { _geminiEndpoint = value; OnPropertyChanged(); }
+  }
+  private string? _azureOpenAIApiKey;
+  public string? AzureOpenAIApiKey
+  {
+    get => _azureOpenAIApiKey;
+    set
+    {
+      if (_azureOpenAIApiKey != value)
+      {
+        _azureOpenAIApiKey = value;
+        OnPropertyChanged();
+      }
+    }
+  }
+
+  private string? _azureOpenAIModelID;
+
+  public string? AzureOpenAIModelID
+  {
+    get { return _azureOpenAIModelID; }
+    set { _azureOpenAIModelID = value; OnPropertyChanged(); }
+  }
+
+  private string? _azureOpenEndPoint;
+
+  public string? AzureOpenAIEndPoint
+  {
+    get { return _azureOpenEndPoint; }
+    set { _azureOpenEndPoint = value; OnPropertyChanged(); }
+  }
+
+  private string? _azureOpenDeploymentName;
+
+  public string? AzureOpenAIDeploymentName
+  {
+    get { return _azureOpenDeploymentName; }
+    set { _azureOpenDeploymentName = value; OnPropertyChanged(); }
   }
   private int _llmRetries;
   public int LLMRetries

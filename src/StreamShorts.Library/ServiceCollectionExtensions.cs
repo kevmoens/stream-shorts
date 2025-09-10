@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 using StreamShorts.Library.Analysis;
+using StreamShorts.Library.Analysis.AzureOpenAI;
+using StreamShorts.Library.Analysis.ChatGPT;
 using StreamShorts.Library.Analysis.Gemini;
 using StreamShorts.Library.Analysis.Ollama;
 using StreamShorts.Library.Analysis.Prompts;
@@ -23,6 +25,8 @@ public static class ServiceCollectionExtensions
     services.AddSingleton<ITranscriber, WhisperTranscriber>();
     services.AddKeyedSingleton<ITranscriptAnalyzer, GeminiAnalyzer>(LLMProvider.Gemini.ToString());
     services.AddKeyedSingleton<ITranscriptAnalyzer, OllamaAnalyzer>(LLMProvider.Ollama.ToString());
+    services.AddKeyedSingleton<ITranscriptAnalyzer, ChatGPTAnalyzer>(LLMProvider.ChatGpt.ToString());
+    services.AddKeyedSingleton<ITranscriptAnalyzer, AzureOpenAIAnalyzer>(LLMProvider.AzureOpenAI.ToString());
     services.AddSingleton<Settings>();
     services.AddSingleton<SettingsRepo>();
     return services;

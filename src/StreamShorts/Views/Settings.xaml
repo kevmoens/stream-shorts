@@ -31,6 +31,11 @@
             FalseVisibility="Collapsed"
             TargetProvider="Gemini"
             TrueVisibility="Visible" />
+        <conv:LLMProviderVisibilityConverter
+            x:Key="AzureOpenAIVisiblity"
+            FalseVisibility="Collapsed"
+            TargetProvider="AzureOpenAI"
+            TrueVisibility="Visible" />
         <conv:BoolToVisibilityConverter
             x:Key="BoolToVisibilityConverter"
             FalseVisibility="Collapsed"
@@ -103,6 +108,71 @@
                         Width="300"
                         conv:TextBoxHelper.Placeholder="ChatGpt Api Key"
                         Text="{Binding ChatGptApiKey, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource ChatGptVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="ChatGpt Model ID:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="ChatGpt Model ID"
+                        Text="{Binding ChatGptModelID, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource AzureOpenAIVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="AzureOpenAI Api Key:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="AzureOpenAI Api Key"
+                        Text="{Binding AzureOpenAIApiKey, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource AzureOpenAIVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="AzureOpenAI Model ID:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="AzureOpenAI Model ID"
+                        Text="{Binding AzureOpenAIModelID, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource AzureOpenAIVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="AzureOpenAI End Point:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="AzureOpenAI End Point"
+                        Text="{Binding AzureOpenAIEndPoint, Mode=TwoWay}" />
+                </StackPanel>
+                <StackPanel
+                    Margin="0,0,0,10"
+                    Orientation="Horizontal"
+                    Visibility="{Binding LLMProvider, Converter={StaticResource AzureOpenAIVisiblity}}">
+                    <Label
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Content="AzureOpenAI Deployment Name:" />
+                    <TextBox
+                        Width="300"
+                        conv:TextBoxHelper.Placeholder="AzureOpenAI Deployment Name"
+                        Text="{Binding AzureOpenAIDeploymentName, Mode=TwoWay}" />
                 </StackPanel>
                 <StackPanel
                     Margin="0,0,0,10"

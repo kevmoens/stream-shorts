@@ -60,6 +60,14 @@ public class Settings : INotifyPropertyChanged
     }
   }
 
+  private string? _chatGPTModelID;
+
+  public string? ChatGptModelID
+  {
+    get { return _chatGPTModelID; }
+    set { _chatGPTModelID = value; OnPropertyChanged(); }
+  }
+
   public string? ChatGptApiKey
   {
     get => _chatGptApiKey;
@@ -71,6 +79,44 @@ public class Settings : INotifyPropertyChanged
         OnPropertyChanged();
       }
     }
+  }
+
+  private string? _azureOpenAIApiKey;
+  public string? AzureOpenAIApiKey
+  {
+    get => _azureOpenAIApiKey;
+    set
+    {
+      if (_azureOpenAIApiKey != value)
+      {
+        _azureOpenAIApiKey = value;
+        OnPropertyChanged();
+      }
+    }
+  }
+
+  private string? _azureOpenAIModelID;
+
+  public string? AzureOpenAIModelID
+  {
+    get { return _azureOpenAIModelID; }
+    set { _azureOpenAIModelID = value; OnPropertyChanged(); }
+  }
+
+  private string? _azureOpenEndPoint;
+
+  public string? AzureOpenAIEndPoint
+  {
+    get { return _azureOpenEndPoint; }
+    set { _azureOpenEndPoint = value; OnPropertyChanged(); }
+  }
+
+  private string? _azureOpenDeploymentName;
+
+  public string? AzureOpenAIDeploymentName
+  {
+    get { return _azureOpenDeploymentName; }
+    set { _azureOpenDeploymentName = value; OnPropertyChanged(); }
   }
 
   public int BatchSize

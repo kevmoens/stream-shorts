@@ -75,6 +75,7 @@ public sealed class DefaultAnalysisPrompt : IAnalysisPrompt
     {
       sb.AppendLine("- **Insightful:** Portions offering unique perspectives or 'aha!' moments.");
     }
+    sb.AppendLine("- **High Engagement Potential:** Clips that contain laughing or high energy.");
 #pragma warning disable CA1307 // Specify StringComparison for clarity
     return prompt.Replace("--1--", sb.ToString());
 #pragma warning restore CA1307 // Specify StringComparison for clarity

@@ -9,6 +9,8 @@ using System.Windows;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using NLog.Extensions.Logging;
+
 using StreamShorts.Library;
 using StreamShorts.MVVM;
 using StreamShorts.MVVM.Install;
@@ -77,7 +79,12 @@ namespace StreamShorts
       services.AddTransient<IUiDispatcher, UiDispatcher>();
       services.AddSingleton<INavigationEvent, NavigationEvent>();
       services.AddSingleton<IEnvironment, StreamShorts.UI.Environments>();
+      services.AddSingleton<ISettingsCanSave, SettingsCanSave>();
 
+      services.AddLogging(loggingBuilder =>
+      {
+        loggingBuilder.AddNLog();
+      });
       _serviceProvider = services.BuildServiceProvider();
 		}
 	}

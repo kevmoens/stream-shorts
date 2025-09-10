@@ -9,5 +9,6 @@ public enum LLMProvider
 {
   Ollama,
   ChatGpt,
-  Gemini
+  Gemini,
+  AzureOpenAI
 }

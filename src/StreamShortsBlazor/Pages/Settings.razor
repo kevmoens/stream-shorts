@@ -39,6 +39,10 @@
             <div class="settings-row">
                 <label class="settings-label">ChatGpt Api Key:</label>
                 <input class="settings-input-wide" placeholder="ChatGpt Api Key" @bind="_viewModel.ChatGptApiKey" />
+            </div> 
+            <div class="settings-row">
+                <label class="settings-label">ChatGPT Model Id:</label>
+                <input class="settings-input-wide" placeholder="Gemini Model Id" @bind="_viewModel.ChatGptModelID" />
             </div>
         }
 
@@ -55,6 +59,25 @@
             <div class="settings-row">
                 <label class="settings-label">Gemini Endpoint:</label>
                 <input class="settings-input-wide" placeholder="Gemini Endpoint" @bind="_viewModel.GeminiEndpoint" />
+            </div>
+        }
+        @if (_viewModel.LLMProvider == StreamShorts.Library.Analysis.LLMProvider.AzureOpenAI)
+        {
+            <div class="settings-row">
+                <label class="settings-label">Azure OpenAI Api Key:</label>
+                <input class="settings-input-wide" placeholder="Azure OpenAI Api Key" @bind="_viewModel.AzureOpenAIApiKey" />
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Azure OpenAI Model Id:</label>
+                <input class="settings-input-wide" placeholder="Azure OpenAI Model Id" @bind="_viewModel.AzureOpenAIModelID" />
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Azure OpenAI Endpoint:</label>
+                <input class="settings-input-wide" placeholder="Azure OpenAI Endpoint" @bind="_viewModel.AzureOpenAIEndPoint" />
+            </div>
+            <div class="settings-row">
+                <label class="settings-label">Azure OpenAI Deployment Name:</label>
+                <input class="settings-input-wide" placeholder="Azure OpenAI Deployment Name" @bind="_viewModel.AzureOpenAIDeploymentName" />
             </div>
         }
 

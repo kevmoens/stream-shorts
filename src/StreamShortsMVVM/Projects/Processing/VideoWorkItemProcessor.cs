@@ -68,6 +68,7 @@ public class VideoWorkItemProcessor
       }
       if (errorMessage != null)
       {
+        workItem.Project.IsProcessing = false;
         yield return errorMessage;
         yield break;
       }

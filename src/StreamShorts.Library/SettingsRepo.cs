@@ -50,6 +50,11 @@ public class SettingsRepo
     Settings currsettings = System.Text.Json.JsonSerializer.Deserialize<Settings>(json) ?? new Settings();
     _settings.BatchSize = currsettings.BatchSize;
     _settings.ChatGptApiKey = currsettings.ChatGptApiKey;
+    _settings.ChatGptModelID = currsettings.ChatGptModelID;
+    _settings.AzureOpenAIApiKey = currsettings.AzureOpenAIApiKey;
+    _settings.AzureOpenAIEndPoint = currsettings.AzureOpenAIEndPoint;
+    _settings.AzureOpenAIDeploymentName = currsettings.AzureOpenAIDeploymentName;
+    _settings.AzureOpenAIModelID = currsettings.AzureOpenAIModelID;
     _settings.MaxClipLength = currsettings.MaxClipLength;
     _settings.GeminiEndpoint = currsettings.GeminiEndpoint;
     _settings.GeminiModelId = currsettings.GeminiModelId;

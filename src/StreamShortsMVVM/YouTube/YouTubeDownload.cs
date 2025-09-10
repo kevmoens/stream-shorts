@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using YoutubeExplode;
 using YoutubeExplode.Converter;
+using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.ClosedCaptions;
 using YoutubeExplode.Videos.Streams;
 
@@ -36,25 +37,56 @@ public class YouTubeDownload
     ArgumentNullException.ThrowIfNull(FolderPath, nameof(FolderPath));
 
     var youtube = new YoutubeClient();
-    var video = await youtube.Videos.GetAsync(URL.OriginalString).ConfigureAwait(false);
+    VideoId id = VideoId.Parse(URL.OriginalString);
+    var video = await youtube.Videos.GetAsync(id).ConfigureAwait(false);
 
-    var streamManifest = await youtube.Videos.Streams.GetManifestAsync(URL.OriginalString).ConfigureAwait(false);
+    IStreamInfo? audioStreamInfo = null;
+    IVideoStreamInfo? videoStreamInfo = null;
+    int retries = 0;
+    while ((audioStreamInfo == null || videoStreamInfo == null) && retries < 10)
+    {
+      var streamManifest = await youtube.Videos.Streams.GetManifestAsync(video.Id).ConfigureAwait(false);
 
+      // Select best audio stream (highest bitrate)
+      if (audioStreamInfo == null)
+      {
+        try
+        {
+          audioStreamInfo = streamManifest
+            .GetAudioStreams()
+            .Where(s => s.Container == Container.Mp4)
+            .GetWithHighestBitrate();
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine("Unable to download audio stream : " + ex.Message);
+        }
+      }
 
-    // Select best audio stream (highest bitrate)
-    var audioStreamInfo = streamManifest
-      .GetAudioStreams()
-      .Where(s => s.Container == Container.Mp4)
-      .GetWithHighestBitrate();
-
-    // Select best video stream (1080p60 in this example)
-    var videoStreamInfo = streamManifest
-      .GetVideoStreams()
-      .Where(s => s.Container == Container.Mp4)
-      .First(s => s.VideoQuality.Label == "1080p");
-
+      // Select best video stream (1080p60 in this example)
+      if (videoStreamInfo == null)
+      {
+        try
+        {
+          videoStreamInfo = streamManifest
+            .GetVideoStreams()
+            .Where(s => s.Container == Container.Mp4)
+            .GetWithHighestVideoQuality();
+            //.First(s => s.VideoQuality.Label == "1080p");
+        }
+        catch (Exception ex)
+        {
+          Console.WriteLine("Unable to download video stream : " + ex.Message);
+        }
+      }
+      retries++;
+    }
+    if (audioStreamInfo == null || videoStreamInfo == null)
+    {
+      throw new ArgumentNullException("Unable to download YouTube video");
+    }
     // Download and mux streams into a single file
-    var streamInfos = new IStreamInfo[] { audioStreamInfo, videoStreamInfo };
+    var streamInfos = new IStreamInfo[] { audioStreamInfo!, videoStreamInfo! };
 
     var invalidChars = Path.GetInvalidFileNameChars();
     string videoTitle = string.Concat(video.Title.Where(c => !invalidChars.Contains(c)));
